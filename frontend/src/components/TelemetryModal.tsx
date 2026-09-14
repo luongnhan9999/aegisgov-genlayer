@@ -20,8 +20,8 @@ export const TelemetryModal: React.FC<TelemetryModalProps> = ({
 }) => {
   if (!isOpen || !proposal) return null;
 
-  const [logUrl, setLogUrl] = useState('https://gist.githubusercontent.com/ai-agent/logs/main/epoch_14_telemetry.log');
-  const [logHash, setLogHash] = useState('82a991b19cefb659b86088902beec02bc5959c83693e53612502787cbe80164c');
+  const [logUrl, setLogUrl] = useState('https://raw.githubusercontent.com/luongnhan9999/aegisgov-genlayer/main/docs/telemetry/yield_agent_log.txt');
+  const [logHash, setLogHash] = useState('86fab43e9f0a2207e9fa26d76f8c018fa65e7b6f6167d5524f83041714020ef1');
   const [rawLogText, setRawLogText] = useState('');
   const [isHashing, setIsHashing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');

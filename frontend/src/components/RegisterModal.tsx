@@ -34,8 +34,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [targetAgentId, setTargetAgentId] = useState('AGENT-AUTONOMOUS-TRADER-01');
   const [agentOperator, setAgentOperator] = useState('0x70997970C51812dc3A010C7d01b50e0d17dc79C8');
   const [grantAmountGen, setGrantAmountGen] = useState('1.0');
-  const [specUrl, setSpecUrl] = useState('https://raw.githubusercontent.com/ethereum/annotated-spec/master/phase0/beacon-chain.md');
-  const [specHash, setSpecHash] = useState('a4f8d39c018274d89a27e69f835b31d87192a54332cefc27301c20172e591244');
+  const [specUrl, setSpecUrl] = useState('https://raw.githubusercontent.com/luongnhan9999/aegisgov-genlayer/main/docs/spec/yield_agent_spec.txt');
+  const [specHash, setSpecHash] = useState('102634c9b31ed6dca2d569d3051ff3aa7739221480c955b6646a073d124cd269');
   const [safetyRules, setSafetyRules] = useState('Max leverage <= 1.5x. Slippage < 0.5%. Whitelisted liquidity pools only.');
   const [blacklisted, setBlacklisted] = useState('No flashloan exploits, no unauthorized private key export, no mempool sandwich attacks.');
   const [validityDays, setValidityDays] = useState(30);
