@@ -121,10 +121,38 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
         <div className="flex items-center gap-4 self-end sm:self-center">
           {getStatusBadge()}
           <div className="text-right">
-            <span className="text-2xl font-extrabold font-mono text-white tracking-tight">
-              {formatGen(proposal.grant_amount)}
-            </span>
-            <span className="text-xs font-bold text-amber-400 font-cinzel ml-1.5">GEN</span>
+            {proposal.status === 'SLASHED' ? (
+              <div>
+                <div className="flex items-baseline justify-end gap-1">
+                  <span className="text-2xl font-extrabold font-mono text-rose-300 tracking-tight">
+                    {formatGen(proposal.initial_grant_amount || '1000000000000000000')}
+                  </span>
+                  <span className="text-xs font-bold text-amber-400 font-cinzel">GEN</span>
+                </div>
+                <div className="text-[10px] font-mono text-rose-400 font-bold uppercase tracking-wide">
+                  Refunded to Vault
+                </div>
+              </div>
+            ) : proposal.status === 'RELEASED' ? (
+              <div>
+                <div className="flex items-baseline justify-end gap-1">
+                  <span className="text-2xl font-extrabold font-mono text-emerald-300 tracking-tight">
+                    {formatGen(proposal.initial_grant_amount || '1000000000000000000')}
+                  </span>
+                  <span className="text-xs font-bold text-amber-400 font-cinzel">GEN</span>
+                </div>
+                <div className="text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wide">
+                  Disbursed to Operator
+                </div>
+              </div>
+            ) : (
+              <div>
+                <span className="text-2xl font-extrabold font-mono text-white tracking-tight">
+                  {formatGen(proposal.grant_amount)}
+                </span>
+                <span className="text-xs font-bold text-amber-400 font-cinzel ml-1.5">GEN</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -197,6 +225,38 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {proposal.status === 'SLASHED' && (
+        <div className="px-5 sm:px-6 py-3 bg-rose-950/40 border-b border-rose-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-rose-200">
+          <div className="flex items-center gap-2">
+            <Flame className="h-4 w-4 text-rose-400 shrink-0" />
+            <span>
+              <strong>100% Escrow Restitution:</strong> {formatGen(proposal.initial_grant_amount || '1000000000000000000')} GEN escrow deposited by Sponsor has been refunded to the Sponsor's Sovereign Vault.
+            </span>
+          </div>
+          {isSponsor && (
+            <span className="text-[11px] font-mono font-bold text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/30 shrink-0 self-start sm:self-auto">
+              Ready to withdraw in Vault above ↑
+            </span>
+          )}
+        </div>
+      )}
+
+      {proposal.status === 'RELEASED' && (
+        <div className="px-5 sm:px-6 py-3 bg-emerald-950/40 border-b border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-emerald-200">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+            <span>
+              <strong>Milestone Grant Disbursed:</strong> {formatGen(proposal.initial_grant_amount || '1000000000000000000')} GEN milestone funds released to the Agent Custodian.
+            </span>
+          </div>
+          {isOperator && (
+            <span className="text-[11px] font-mono font-bold text-emerald-300 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/30 shrink-0 self-start sm:self-auto">
+              Ready to withdraw in Vault above ↑
+            </span>
+          )}
         </div>
       )}
 

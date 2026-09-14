@@ -25,13 +25,24 @@ export function formatGen(weiAmount: string | bigint | number, decimals = 2): st
 
 export function parseGenToWei(genAmount: string | number): string {
   try {
-    const parts = String(genAmount).trim().split('.');
-    const integer = BigInt(parts[0] || '0') * 1000000000000000000n;
+    // Normalize string: convert commas to dots and remove any accidental characters like 'GEN' or spaces
+    const clean = String(genAmount)
+      .trim()
+      .replace(',', '.')
+      .replace(/[^\d.]/g, '');
+    
+    if (!clean || clean === '.') return '0';
+    
+    const parts = clean.split('.');
+    const integerStr = parts[0] || '0';
+    const integer = BigInt(integerStr) * 1000000000000000000n;
+    
     let fraction = 0n;
     if (parts[1]) {
-      const padded = parts[1].padEnd(18, '0').slice(0, 18);
+      const padded = parts[1].slice(0, 18).padEnd(18, '0');
       fraction = BigInt(padded);
     }
+    
     return (integer + fraction).toString();
   } catch (e) {
     return '0';

@@ -31,6 +31,25 @@ export function getGenLayerClient(
   });
 }
 
+export function getInitialGrantCache(): Record<string, string> {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem('aegisgov_initial_grants') : null;
+    return raw ? JSON.parse(raw) : { '99999999999999999999': '1000000000000000000' };
+  } catch (e) {
+    return { '99999999999999999999': '1000000000000000000' };
+  }
+}
+
+export function saveInitialGrantAmount(proposalId: string, amountWei: string) {
+  try {
+    const cache = getInitialGrantCache();
+    cache[proposalId] = amountWei;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('aegisgov_initial_grants', JSON.stringify(cache));
+    }
+  } catch (e) {}
+}
+
 /**
  * Fetch all proposals from AegisGov intelligent contract on-chain
  */
@@ -62,6 +81,7 @@ export async function readProposalsFromChain(
     const parsed = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
 
     if (Array.isArray(parsed)) {
+      const initialGrantsCache = getInitialGrantCache();
       // Parallel fetch full proposal details for each proposal ID
       const detailedProposals = await Promise.all(
         parsed.map(async (p: any) => {
@@ -78,12 +98,19 @@ export async function readProposalsFromChain(
               } catch (e) {}
             }
             const detail = typeof detailStr === 'string' ? JSON.parse(detailStr) : detailStr;
+            const currentGrant = String(detail.grant_amount || p.grant_amount || '0');
+            let initialGrant = initialGrantsCache[String(p.id)];
+            if (currentGrant !== '0') {
+              saveInitialGrantAmount(String(p.id), currentGrant);
+              initialGrant = currentGrant;
+            }
             return {
               id: String(p.id),
               sponsor: String(detail.sponsor || p.sponsor || ''),
               target_agent_id: String(detail.target_agent_id || p.target_agent_id || ''),
               agent_operator: String(detail.agent_operator || p.agent_operator || ''),
-              grant_amount: String(detail.grant_amount || p.grant_amount || '0'),
+              grant_amount: currentGrant,
+              initial_grant_amount: initialGrant || currentGrant,
               status: detail.status || p.status || 'ACTIVE',
               constitutional_spec_url: String(detail.constitutional_spec_url || ''),
               constitutional_spec_hash: String(detail.constitutional_spec_hash || ''),
@@ -100,12 +127,15 @@ export async function readProposalsFromChain(
               disputed_at: String(detail.disputed_at || '0'),
             } as PolicyProposal;
           } catch (e) {
+            const currentGrant = String(p.grant_amount || '0');
+            const initialGrant = initialGrantsCache[String(p.id)] || currentGrant;
             return {
               id: String(p.id),
               sponsor: String(p.sponsor || ''),
               target_agent_id: String(p.target_agent_id || ''),
               agent_operator: String(p.agent_operator || ''),
-              grant_amount: String(p.grant_amount || '0'),
+              grant_amount: currentGrant,
+              initial_grant_amount: initialGrant,
               status: p.status || 'ACTIVE',
               constitutional_spec_url: '',
               constitutional_spec_hash: '',

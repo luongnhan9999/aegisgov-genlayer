@@ -30,7 +30,8 @@ import {
 import { 
   readProposalsFromChain, 
   readWithdrawableCredits, 
-  writeContractOnChain 
+  writeContractOnChain,
+  saveInitialGrantAmount
 } from './utils/genlayer';
 import { parseGenToWei } from './utils/format';
 
@@ -266,6 +267,7 @@ export const App: React.FC = () => {
           addLog(`[Consensus] ${stage}`);
         }
       );
+      saveInitialGrantAmount(params.proposalId, valueWei);
 
       setConsensusState({
         isOpen: true,

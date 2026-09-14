@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ShieldPlus, Hash, Sparkles, AlertCircle } from 'lucide-react';
 import type { DemoScenario } from '../types';
-import { computeSha256 } from '../utils/format';
+import { computeSha256, parseGenToWei } from '../utils/format';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -55,6 +55,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       setSpecHash(initialScenario.spec_hash);
       setSafetyRules(initialScenario.safety_boundaries);
       setBlacklisted(initialScenario.blacklisted_behaviors);
+    } else if (isOpen) {
+      setProposalId(`PROP-${Math.floor(1000 + Math.random() * 9000)}`);
     }
   }, [initialScenario, isOpen]);
 
@@ -87,9 +89,15 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       return;
     }
 
-    const amountNum = parseFloat(grantAmountGen);
+    const cleanAmount = grantAmountGen.trim().replace(',', '.').replace(/[^\d.]/g, '');
+    const amountNum = parseFloat(cleanAmount);
     if (isNaN(amountNum) || amountNum <= 0) {
       setErrorMsg('Grant escrow amount must be greater than 0 GEN.');
+      return;
+    }
+    const valueWei = parseGenToWei(cleanAmount);
+    if (BigInt(valueWei) <= 0n) {
+      setErrorMsg('Grant escrow amount must be greater than 0.');
       return;
     }
 
@@ -98,7 +106,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         proposalId: proposalId.trim(),
         targetAgentId: targetAgentId.trim(),
         agentOperator: agentOperator.trim(),
-        grantAmountGen: grantAmountGen.trim(),
+        grantAmountGen: cleanAmount,
         specUrl: specUrl.trim(),
         specHash: specHash.trim().toLowerCase(),
         safetyRules: safetyRules.trim(),
@@ -199,17 +207,39 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Grant Escrow (GEN)</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-slate-300 font-semibold">Grant Escrow Deposit (GEN)</label>
+                <span className="text-[10px] text-amber-400 font-mono font-bold">
+                  {grantAmountGen.trim() ? `${grantAmountGen.trim().replace(',', '.')} GEN` : '0 GEN'}
+                </span>
+              </div>
               <input
-                type="number"
-                step="any"
-                min="0.001"
+                type="text"
+                inputMode="decimal"
                 value={grantAmountGen}
                 onChange={(e) => setGrantAmountGen(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-cyan-500 focus:outline-none"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-cyan-500 focus:outline-none text-sm font-bold"
                 placeholder="1.0"
                 required
               />
+              {/* Quick preset buttons */}
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <span className="text-[10px] text-slate-500">Quick:</span>
+                {['0.1', '0.5', '1.0', '2.5', '5.0'].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setGrantAmountGen(preset)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono border transition cursor-pointer ${
+                      grantAmountGen.trim().replace(',', '.') === preset
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold'
+                        : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
+                    }`}
+                  >
+                    {preset} GEN
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

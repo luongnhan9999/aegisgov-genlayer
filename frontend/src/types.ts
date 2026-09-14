@@ -6,7 +6,8 @@ export interface PolicyProposal {
   sponsor: string;
   target_agent_id: string;
   agent_operator: string;
-  grant_amount: string; // Wei / raw units
+  grant_amount: string; // Wei / raw units (current active locked escrow)
+  initial_grant_amount?: string; // Original locked grant amount before payout / slashing refund
   status: ProposalStatus;
   constitutional_spec_url: string;
   constitutional_spec_hash: string;
