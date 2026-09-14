@@ -12,6 +12,7 @@ import { DemoScenarioCard } from './components/DemoScenarioCard';
 import { RegisterModal } from './components/RegisterModal';
 import { TelemetryModal } from './components/TelemetryModal';
 import { DisputeModal } from './components/DisputeModal';
+import { AppealModal } from './components/AppealModal';
 import { ConsensusProgressModal } from './components/ConsensusProgressModal';
 
 import type { PolicyProposal, DemoScenario } from './types';
@@ -20,7 +21,8 @@ import {
   connectMetaMaskWallet, 
   autoCheckWalletConnection, 
   setupWalletListeners,
-  fetchWalletBalance 
+  fetchWalletBalance,
+  disconnectWalletSession
 } from './utils/web3';
 import { 
   readProposalsFromChain, 
@@ -64,6 +66,7 @@ export const App: React.FC = () => {
   const [activeScenario, setActiveScenario] = useState<DemoScenario | null>(null);
   const [telemetryProposal, setTelemetryProposal] = useState<PolicyProposal | null>(null);
   const [disputeProposal, setDisputeProposal] = useState<PolicyProposal | null>(null);
+  const [appealProposal, setAppealProposal] = useState<PolicyProposal | null>(null);
 
   const addLog = (msg: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -153,6 +156,28 @@ export const App: React.FC = () => {
       alert(err.message || 'Failed to connect MetaMask');
     } finally {
       setIsConnecting(false);
+    }
+  };
+
+  // Disconnect Wallet
+  const handleDisconnectWallet = () => {
+    disconnectWalletSession();
+    setAccount('');
+    setWalletBalance('0 GEN');
+    setWithdrawableCredits('0');
+    addLog('Signer session detached. Local credentials purged.');
+  };
+
+  // Manual Refresh Balance from Studionet RPC
+  const handleRefreshBalance = async () => {
+    if (!account) return;
+    addLog('Synchronizing balance directly from GenLayer Studionet RPC...');
+    try {
+      const bal = await fetchWalletBalance(account);
+      setWalletBalance(bal);
+      addLog(`Studionet balance updated: ${bal}`);
+    } catch (e: any) {
+      addLog(`Failed to refresh balance: ${e.message}`);
     }
   };
 
@@ -310,6 +335,96 @@ export const App: React.FC = () => {
       });
       addLog(`[Dispute Error] ${err.message}`);
       throw err;
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  // 3b. Submit Judicial Appeal & Validator Re-audit
+  const handleAppealDispute = async (proposalId: string, evidenceUrl: string, evidenceHash: string) => {
+    if (!account) throw new Error('Please connect your MetaMask wallet first.');
+    if (!contractAddress) throw new Error('Contract address not configured.');
+
+    setIsActionLoading(true);
+    setConsensusState({
+      isOpen: true,
+      stage: 'Submitting judicial appeal to GenLayer supreme validator quorum...',
+    });
+    addLog(`Filing dispute appeal for Docket #${proposalId} with counter-evidence...`);
+
+    try {
+      const result = await writeContractOnChain(
+        contractAddress,
+        'appeal_and_reaudit',
+        [proposalId, evidenceUrl, evidenceHash],
+        '0',
+        'studionet',
+        account,
+        (stage) => {
+          setConsensusState((prev) => ({ ...prev, stage }));
+          addLog(`[Judicial Appeal] ${stage}`);
+        }
+      );
+
+      setConsensusState({
+        isOpen: true,
+        stage: `Supreme Validator Consensus finalized for #${proposalId}! Dispute decree recorded.`,
+        txHash: result.txHash,
+      });
+      addLog(`[Appeal Decreed] Hash: ${result.txHash}`);
+      await refreshState();
+    } catch (err: any) {
+      setConsensusState({
+        isOpen: true,
+        stage: 'Appeal consensus audit failed',
+        error: err.message || 'Validator consensus disagreement or execution failure',
+      });
+      addLog(`[Appeal Error] ${err.message}`);
+      throw err;
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  // 3c. Dismiss Dispute Amicably (For Sponsor)
+  const handleDismissDispute = async (proposalId: string) => {
+    if (!account) return alert('Please connect MetaMask first.');
+
+    setIsActionLoading(true);
+    setConsensusState({
+      isOpen: true,
+      stage: 'Dismissing dispute challenge and releasing milestone escrow to Operator...',
+    });
+    addLog(`Sponsor withdrawing dispute for #${proposalId}...`);
+
+    try {
+      const result = await writeContractOnChain(
+        contractAddress,
+        'dismiss_dispute_and_release',
+        [proposalId],
+        '0',
+        'studionet',
+        account,
+        (stage) => {
+          setConsensusState((prev) => ({ ...prev, stage }));
+          addLog(`[Dismiss Dispute] ${stage}`);
+        }
+      );
+
+      setConsensusState({
+        isOpen: true,
+        stage: `Dispute amicably dismissed! Escrow unlocked to Operator credit vault.`,
+        txHash: result.txHash,
+      });
+      addLog(`[Dispute Dismissed] Hash: ${result.txHash}`);
+      await refreshState();
+    } catch (err: any) {
+      setConsensusState({
+        isOpen: true,
+        stage: 'Dismissal failed',
+        error: err.message || 'Transaction rejected',
+      });
+      addLog(`[Dismissal Error] ${err.message}`);
     } finally {
       setIsActionLoading(false);
     }
@@ -473,6 +588,8 @@ export const App: React.FC = () => {
         walletBalance={walletBalance}
         isConnecting={isConnecting}
         onConnectWallet={handleConnectWallet}
+        onDisconnectWallet={handleDisconnectWallet}
+        onRefreshBalance={handleRefreshBalance}
         contractAddress={contractAddress}
         onUpdateContractAddress={handleUpdateContract}
         network="studionet"
@@ -628,12 +745,12 @@ export const App: React.FC = () => {
             </div>
 
             {/* Status Tabs */}
-            <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-mono">
-              {['ALL', 'ACTIVE', 'EVALUATING', 'RELEASED', 'SLASHED'].map((st) => (
+            <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-mono overflow-x-auto">
+              {['ALL', 'ACTIVE', 'EVALUATING', 'DISPUTED', 'RELEASED', 'SLASHED', 'EXPIRED'].map((st) => (
                 <button
                   key={st}
                   onClick={() => setFilterStatus(st)}
-                  className={`px-3 py-1 rounded-lg font-bold transition ${
+                  className={`px-3 py-1 rounded-lg font-bold transition shrink-0 cursor-pointer ${
                     filterStatus === st
                       ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
                       : 'text-slate-400 hover:text-slate-200'
@@ -662,7 +779,7 @@ export const App: React.FC = () => {
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3.5">
                 <button
                   onClick={() => handleSelectScenario(DEMO_SCENARIOS[0])}
-                  className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 text-xs font-bold border border-amber-500/30 transition shadow-lg"
+                  className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 text-xs font-bold border border-amber-500/30 transition shadow-lg cursor-pointer"
                 >
                   Docket Compliant Yield Bot (1 GEN)
                 </button>
@@ -671,7 +788,7 @@ export const App: React.FC = () => {
                     setActiveScenario(null);
                     setIsRegisterOpen(true);
                   }}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-bold shadow-lg shadow-amber-500/20 transition"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-bold shadow-lg shadow-amber-500/20 transition cursor-pointer"
                 >
                   Create Custom Case Docket
                 </button>
@@ -685,6 +802,8 @@ export const App: React.FC = () => {
                 currentUser={account}
                 onSubmitTelemetry={(p) => setTelemetryProposal(p)}
                 onRaiseDispute={(p) => setDisputeProposal(p)}
+                onAppealDispute={(p) => setAppealProposal(p)}
+                onDismissDispute={handleDismissDispute}
                 onFinalizeDisbursement={handleFinalizeDisbursement}
                 onRecoverExpired={handleRecoverExpired}
                 isActionLoading={isActionLoading}
@@ -771,6 +890,14 @@ export const App: React.FC = () => {
         proposal={disputeProposal}
         onClose={() => setDisputeProposal(null)}
         onSubmitDispute={handleRaiseDispute}
+        isLoading={isActionLoading}
+      />
+
+      <AppealModal
+        isOpen={!!appealProposal}
+        proposal={appealProposal}
+        onClose={() => setAppealProposal(null)}
+        onSubmitAppeal={handleAppealDispute}
         isLoading={isActionLoading}
       />
 

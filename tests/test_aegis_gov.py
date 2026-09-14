@@ -394,5 +394,138 @@ class TestAegisGovStandards(unittest.TestCase):
         with self.assertRaises(Exception):
             c.withdraw_credits()
 
+    def test_12_dismiss_dispute_and_release(self):
+        """Sponsor tự nguyện rút đơn khiếu nại (dismiss dispute), tiền chuyển về cho Operator."""
+        c = contract_module.Contract()
+        spec_text = "Spec rules"
+        spec_hash = hashlib.sha256(spec_text.encode("utf-8")).hexdigest().lower()
+        log_text = "Valid telemetry"
+        log_hash = hashlib.sha256(log_text.encode("utf-8")).hexdigest().lower()
+
+        self.gl.message.value = MockBigInt(2500)
+        self.gl.message.sender_address = MockAddress("0xsponsor")
+        c.register_governance_grant(
+            "PROP-DISMISS", "AGENT-07", "0xoperator",
+            "https://example.com/spec", spec_hash, "Safe", "None"
+        )
+
+        # Operator submits telemetry
+        self.gl.nondet.web.render = lambda url, mode="text": spec_text if "spec" in url else log_text
+        self.gl.nondet.exec_prompt = lambda prompt, response_format="json": {
+            "is_compliant": True,
+            "reason": "Safe operations"
+        }
+        self.gl.message.sender_address = MockAddress("0xoperator")
+        c.submit_compliance_telemetry("PROP-DISMISS", "https://example.com/log", log_hash)
+
+        # Sponsor raises dispute
+        self.gl.message.sender_address = MockAddress("0xsponsor")
+        c.raise_compliance_dispute("PROP-DISMISS", "Temporary dispute for clarification")
+        self.assertEqual(c.proposals["PROP-DISMISS"].status, "DISPUTED")
+
+        # Non-sponsor cannot dismiss
+        self.gl.message.sender_address = MockAddress("0xstranger")
+        with self.assertRaises(Exception):
+            c.dismiss_dispute_and_release("PROP-DISMISS")
+
+        # Sponsor dismisses dispute
+        self.gl.message.sender_address = MockAddress("0xsponsor")
+        c.dismiss_dispute_and_release("PROP-DISMISS")
+
+        p = c.proposals["PROP-DISMISS"]
+        self.assertEqual(p.status, "RELEASED")
+        self.assertEqual(c.withdrawable_credits["0xoperator"], 2500)
+        self.assertEqual(c.total_locked_escrow, 0)
+
+    def test_13_appeal_and_reaudit_flow(self):
+        """Operator kháng cáo tranh chấp (appeal & re-audit) và hội đồng validator xét xử chung thẩm."""
+        c = contract_module.Contract()
+        spec_text = "Constitutional Spec"
+        spec_hash = hashlib.sha256(spec_text.encode("utf-8")).hexdigest().lower()
+        orig_log = "Orig telemetry"
+        orig_log_hash = hashlib.sha256(orig_log.encode("utf-8")).hexdigest().lower()
+        appeal_log = "Detailed audit proof refuting dispute allegation"
+        appeal_hash = hashlib.sha256(appeal_log.encode("utf-8")).hexdigest().lower()
+
+        self.gl.message.value = MockBigInt(5000)
+        self.gl.message.sender_address = MockAddress("0xsponsor")
+        c.register_governance_grant(
+            "PROP-APPEAL", "AGENT-08", "0xoperator",
+            "https://example.com/spec", spec_hash, "Safe", "None"
+        )
+
+        # Telemetry & Dispute
+        self.gl.nondet.web.render = lambda url, mode="text": spec_text if "spec" in url else orig_log
+        self.gl.nondet.exec_prompt = lambda prompt, response_format="json": {
+            "is_compliant": True,
+            "reason": "Compliant round 1"
+        }
+        self.gl.message.sender_address = MockAddress("0xoperator")
+        c.submit_compliance_telemetry("PROP-APPEAL", "https://example.com/orig_log", orig_log_hash)
+
+        self.gl.message.sender_address = MockAddress("0xsponsor")
+        c.raise_compliance_dispute("PROP-APPEAL", "Suspected hidden slippage")
+        self.assertEqual(c.proposals["PROP-APPEAL"].status, "DISPUTED")
+
+        # Appeal with tampered hash MUST fail
+        self.gl.message.sender_address = MockAddress("0xoperator")
+        with self.assertRaises(Exception):
+            c.appeal_and_reaudit("PROP-APPEAL", "https://example.com/appeal_proof", "badhash"*8)
+
+        # Appeal successfully with re-audit finding COMPLIANT (Exonerated)
+        self.gl.nondet.web.render = lambda url, mode="text": spec_text if "spec" in url else appeal_log
+        self.gl.nondet.exec_prompt = lambda prompt, response_format="json": {
+            "is_compliant": True,
+            "reason": "Exonerated: verified no hidden slippage occurred"
+        }
+        c.appeal_and_reaudit("PROP-APPEAL", "https://example.com/appeal_proof", appeal_hash)
+
+        p = c.proposals["PROP-APPEAL"]
+        self.assertEqual(p.status, "RELEASED")
+        self.assertEqual(p.verdict, "COMPLIANT")
+        self.assertEqual(c.withdrawable_credits["0xoperator"], 5000)
+        self.assertEqual(c.total_locked_escrow, 0)
+
+    def test_14_protection_cannot_recover_expired_when_disputed(self):
+        """Bảo vệ Operator: Sponsor KHÔNG THỂ đợi hết hạn hợp đồng để cuỗm tiền khi đang DISPUTED."""
+        c = contract_module.Contract()
+        spec_text = "Spec rules"
+        spec_hash = hashlib.sha256(spec_text.encode("utf-8")).hexdigest().lower()
+        log_text = "Telemetry"
+        log_hash = hashlib.sha256(log_text.encode("utf-8")).hexdigest().lower()
+
+        self.gl.message.value = MockBigInt(3000)
+        self.gl.message.sender_address = MockAddress("0xsponsor")
+        c.register_governance_grant(
+            "PROP-SAFE-OPERATOR", "AGENT-09", "0xoperator",
+            "https://example.com/spec", spec_hash, "Safe", "None", validity_days=MockBigInt(5)
+        )
+
+        # Operator submits telemetry -> EVALUATING
+        self.gl.nondet.web.render = lambda url, mode="text": spec_text if "spec" in url else log_text
+        self.gl.nondet.exec_prompt = lambda prompt, response_format="json": {
+            "is_compliant": True,
+            "reason": "Compliant"
+        }
+        self.gl.message.sender_address = MockAddress("0xoperator")
+        c.submit_compliance_telemetry("PROP-SAFE-OPERATOR", "https://example.com/log", log_hash)
+
+        # Sponsor disputes
+        self.gl.message.sender_address = MockAddress("0xsponsor")
+        c.raise_compliance_dispute("PROP-SAFE-OPERATOR", "Challenged")
+        self.assertEqual(c.proposals["PROP-SAFE-OPERATOR"].status, "DISPUTED")
+
+        # Fast forward past validity (5 days)
+        self.gl.message_raw = {"datetime": "2026-09-25T00:00:00+00:00"}
+
+        # Attempting recover_expired_grant MUST be rejected!
+        with self.assertRaises(Exception):
+            c.recover_expired_grant("PROP-SAFE-OPERATOR")
+
+        # Escrow remains safely locked, status is still DISPUTED
+        p = c.proposals["PROP-SAFE-OPERATOR"]
+        self.assertEqual(p.status, "DISPUTED")
+        self.assertEqual(c.total_locked_escrow, 3000)
+
 if __name__ == "__main__":
     unittest.main()

@@ -68,24 +68,79 @@ export async function ensureStudionetNetwork(): Promise<void> {
 }
 
 /**
- * Fetch real wallet balance on Studionet via eth_getBalance
+ * Format balance in Wei to GEN string
  */
-export async function fetchWalletBalance(address: string): Promise<string> {
-  if (typeof window === 'undefined' || !window.ethereum || !address) return '0 GEN';
-  try {
-    const balanceHex: string = await window.ethereum.request({
-      method: 'eth_getBalance',
-      params: [address, 'latest'],
-    });
-    const balanceWei = BigInt(balanceHex || '0x0');
-    const balanceGen = Number(balanceWei) / 1e18;
-    if (balanceGen === 0) return '0 GEN';
-    if (balanceGen < 0.0001) return '< 0.0001 GEN';
-    return `${balanceGen.toFixed(4).replace(/\.?0+$/, '')} GEN`;
-  } catch (err) {
-    console.warn('Failed to fetch wallet balance:', err);
-    return 'Connected';
+export function formatGenWei(balanceWei: bigint): string {
+  if (balanceWei === 0n) return '0 GEN';
+  const whole = balanceWei / 1000000000000000000n;
+  const remainder = balanceWei % 1000000000000000000n;
+  const fractionStr = remainder.toString().padStart(18, '0');
+  const fourDecimals = fractionStr.substring(0, 4);
+  const formatted = `${whole}.${fourDecimals}`.replace(/\.?0+$/, '');
+  
+  if (whole === 0n && fourDecimals === '0000') {
+    return remainder > 0n ? '< 0.0001 GEN' : '0 GEN';
   }
+  return `${formatted || '0'} GEN`;
+}
+
+/**
+ * Fetch real wallet balance on GenLayer Studionet
+ * Directly queries Studionet RPC (https://studio.genlayer.com/api) to avoid
+ * MetaMask active network mismatch, with graceful fallback to window.ethereum.
+ */
+export async function fetchWalletBalance(
+  address: string,
+  rpcUrl: string = 'https://studio.genlayer.com/api'
+): Promise<string> {
+  if (!address) return '0 GEN';
+
+  // 1. Direct JSON-RPC call to GenLayer Studionet RPC
+  try {
+    const res = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'eth_getBalance',
+        params: [address, 'latest'],
+        id: Date.now(),
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.result !== undefined) {
+        const balanceWei = BigInt(data.result || '0x0');
+        return formatGenWei(balanceWei);
+      }
+    }
+  } catch (rpcErr) {
+    console.warn('Direct Studionet RPC eth_getBalance call failed, using provider fallback:', rpcErr);
+  }
+
+  // 2. Fallback to window.ethereum if direct RPC is unreachable
+  if (typeof window !== 'undefined' && window.ethereum) {
+    try {
+      const balanceHex: string = await window.ethereum.request({
+        method: 'eth_getBalance',
+        params: [address, 'latest'],
+      });
+      const balanceWei = BigInt(balanceHex || '0x0');
+      return formatGenWei(balanceWei);
+    } catch (err) {
+      console.warn('Failed to fetch wallet balance from provider:', err);
+    }
+  }
+
+  return '0 GEN';
+}
+
+/**
+ * Disconnect current wallet session and clear storage
+ */
+export function disconnectWalletSession(): void {
+  saveWalletState('', '');
 }
 
 /**

@@ -11,6 +11,8 @@ interface ProposalCardProps {
   currentUser: string;
   onSubmitTelemetry: (proposal: PolicyProposal) => void;
   onRaiseDispute: (proposal: PolicyProposal) => void;
+  onAppealDispute?: (proposal: PolicyProposal) => void;
+  onDismissDispute?: (proposalId: string) => void;
   onFinalizeDisbursement: (proposalId: string) => void;
   onRecoverExpired: (proposalId: string) => void;
   isActionLoading: boolean;
@@ -21,6 +23,8 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
   currentUser,
   onSubmitTelemetry,
   onRaiseDispute,
+  onAppealDispute,
+  onDismissDispute,
   onFinalizeDisbursement,
   onRecoverExpired,
   isActionLoading,
@@ -332,20 +336,44 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
             <button
               onClick={() => onFinalizeDisbursement(proposal.id)}
               disabled={isActionLoading}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 transition flex items-center gap-1.5 disabled:opacity-50"
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
               <CheckCircle className="h-3.5 w-3.5" />
               Disburse Milestone Escrow
             </button>
           )}
 
-          {/* Action 4: Recover Expired */}
-          {(proposal.status === 'ACTIVE' || proposal.status === 'DISPUTED') && (
+          {/* Action 4: Appeal Dispute & Re-Audit (Fairness for Operator / Sponsor) */}
+          {proposal.status === 'DISPUTED' && onAppealDispute && (
+            <button
+              onClick={() => onAppealDispute(proposal)}
+              disabled={isActionLoading}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+            >
+              <Scale className="h-3.5 w-3.5" />
+              Judicial Appeal &amp; Re-Audit
+            </button>
+          )}
+
+          {/* Action 5: Dismiss Dispute & Release (For Sponsor) */}
+          {proposal.status === 'DISPUTED' && onDismissDispute && isSponsor && (
+            <button
+              onClick={() => onDismissDispute(proposal.id)}
+              disabled={isActionLoading}
+              className="px-3.5 py-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-bold text-xs transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+            >
+              <CheckCircle className="h-3.5 w-3.5" />
+              Dismiss Dispute &amp; Release
+            </button>
+          )}
+
+          {/* Action 6: Recover Expired (Strictly ACTIVE abandoned proposals only) */}
+          {proposal.status === 'ACTIVE' && (
             <button
               onClick={() => onRecoverExpired(proposal.id)}
               disabled={isActionLoading}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition"
-              title="Reclaim escrow after expiration window has elapsed"
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition cursor-pointer"
+              title="Reclaim escrow if agent abandoned milestone without submitting telemetry"
             >
               Reclaim Expired
             </button>
