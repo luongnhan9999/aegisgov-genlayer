@@ -40,7 +40,12 @@ export const App: React.FC = () => {
   const [walletBalance, setWalletBalance] = useState<string>('0 GEN');
   const [isConnecting, setIsConnecting] = useState(false);
   const [contractAddress, setContractAddress] = useState<string>(() => {
-    return localStorage.getItem('aegisgov_contract_address') || DEFAULT_CONTRACT_ADDRESS;
+    const saved = localStorage.getItem('aegisgov_contract_address');
+    if (saved && (saved.toLowerCase() === '0x5b1162a178715bb6a11d0bccdf1cb75da8a7ec32' || saved.toLowerCase() === '0x0000000000000000000000000000000000000000')) {
+      localStorage.setItem('aegisgov_contract_address', DEFAULT_CONTRACT_ADDRESS);
+      return DEFAULT_CONTRACT_ADDRESS;
+    }
+    return saved || DEFAULT_CONTRACT_ADDRESS;
   });
 
   const [currentChainId, setCurrentChainId] = useState<string | null>(null);
