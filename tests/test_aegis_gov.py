@@ -51,6 +51,7 @@ class MockGL:
 
     class vm:
         Return = MockReturn
+        UserError = MockUserError
         @staticmethod
         def run_nondet(leader_fn, validator_fn):
             res = leader_fn()
@@ -58,6 +59,9 @@ class MockGL:
             if not validator_fn(ret):
                 raise MockUserError("Consensus Disagreement")
             return res
+
+    def get_contract_at(self, address):
+        return MockContractStub(address, self.transfers)
 
     class evm:
         @staticmethod

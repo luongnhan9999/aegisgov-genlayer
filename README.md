@@ -1,6 +1,6 @@
 # AegisGov (Autonomous AI Governance & Regulatory Safe-Harbor Protocol)
 
-> **Real-Time Autonomous AI Compliance Court & Smart Grant Escrow on GenLayer Studionet**  
+> **Real-Time Autonomous AI Compliance Court & Decentralized Safe-Harbor Protocol on GenLayer Studionet**  
 > *Track: AI Governance / Autonomous Safe-Harbor | Builder Program Submission*
 > 
 > 🌐 **Live App**: [https://aegisgov-genlayer.vercel.app](https://aegisgov-genlayer.vercel.app)  
@@ -12,16 +12,36 @@
 
 ## 📌 Executive Summary & The Problem Solved
 
-In the burgeoning agentic economy, DAOs, decentralized funds, and algorithmic treasuries are deploying autonomous off-chain AI agents to manage portfolios, curate content, and execute cross-chain operations. 
+In the burgeoning agentic economy, DAOs, decentralized hedge funds, and algorithmic treasuries are deploying autonomous off-chain AI agents to manage portfolios, curate content, and execute high-value cross-chain transactions. 
 
 **The Counterparty Trust Dilemma**:
-How can a decentralized fund disburse grant milestones or capital tranches to an autonomous agent **without trusting the agent's operator**?
+How can a decentralized fund disburse capital tranches to an autonomous agent **without trusting the agent's operator**?
 - Traditional smart contracts (Solidity/EVM) are completely blind to off-chain behavioral logs, model ethics, safety boundaries, and prompt-injection telemetry.
-- Off-chain AI oracles introduce a single point of failure and centralized trust.
-- Manual human DAOs are too slow, expensive, and subjective to evaluate high-frequency algorithmic actions.
+- Off-chain AI oracles introduce a single point of failure, private key extortion, and centralized trust.
+- Manual human DAOs are too slow, expensive, and subjective to audit algorithmic actions at machine speed.
 
 **The AegisGov Solution**:
-AegisGov is an **Intelligent Contract** operating as a real-time, decentralized "AI Compliance Court". Capital sponsors lock grant escrow governed by an immutable **Constitutional Specification**. To unlock milestone funding, the Agent Operator must submit execution telemetry logs. GenLayer's decentralized validator consensus renders the untruncated evidence off-chain, verifies cryptographic SHA-256 integrity, and conducts an adversarial LLM consensus audit to determine whether the agent operated strictly within safe-harbor boundaries.
+AegisGov is an **Intelligent Contract** operating as an autonomous "AI Constitutional Court & Regulatory Safe-Harbor". Capital sponsors lock bonded grant funds governed by an immutable **Constitutional Specification**. To unlock milestone funding, the Agent Operator submits execution telemetry logs. GenLayer's decentralized validator consensus renders the untruncated evidence off-chain, validates cryptographic SHA-256 integrity against on-chain pre-commitments, and conducts an adversarial LLM consensus audit to determine whether the agent operated strictly within safe-harbor boundaries.
+
+---
+
+## 💎 Why AegisGov is Materially Different & Novel (Judge Evaluation Mandates)
+
+AegisGov transcends traditional escrow/bounty primitives through three foundational innovations:
+
+1. **Evidence Acquisition (Material Difference 1)**:
+   - Mandatory on-chain **SHA-256 Digest Manifest** pre-commitment for both constitutional specifications and telemetry logs.
+   - Validator nodes independently fetch off-chain documents via `gl.nondet.web.render` and re-compute the SHA-256 digest on the fly.
+   - Any subtle alteration to the web document (even 1 character) triggers immediate fail-closed `CRITICAL TAMPERING` detection and automatic slashing, preventing retroactively altered evidence.
+
+2. **Authority & Anti-Centralization (Material Difference 2)**:
+   - **Zero Platform Arbiter**: There is NO admin, multisig owner, or centralized arbitrator key.
+   - When disputes are initiated (`raise_compliance_dispute`), resolution is handled strictly through a **decentralized multi-stage validator re-audit** (`appeal_and_reaudit`), where Supreme AI validator quorums cross-examine the original specification against counter-evidence.
+
+3. **State Transition & Safe-Harbor Protection (Material Difference 3)**:
+   - A `COMPLIANT` verdict does **not** instantly transfer funds.
+   - The contract enforces a **24-Hour Cooling-Off Safe-Harbor Window** (`EVALUATING` status), granting the capital sponsor unilateral power to freeze payouts if real-world protocol discrepancies emerge.
+   - Non-custodial pull settlement via `withdraw_credits()` ensures safe, reentrancy-free fund distribution.
 
 ---
 
@@ -222,11 +242,11 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 - **GitHub Repository (Public)**: [https://github.com/luongnhan9999/aegisgov-genlayer](https://github.com/luongnhan9999/aegisgov-genlayer)
 - **Deployed Contract (Studionet)**: [`0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB`](https://genlayer-explorer.vercel.app/address/0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB)
 - **Explorer Link**: [https://genlayer-explorer.vercel.app/address/0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB](https://genlayer-explorer.vercel.app/address/0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB)
-- **Primary Tag**: `AI Governance / Autonomous Safe-Harbor`
+- **Primary Tag**: `AI-Governance`
 - **Tag 1**: `Constitutional-AI`
-- **Tag 2**: `Smart-Escrow`
+- **Tag 2**: `Decentralized-Justice`
 - **Target Network**: `GenLayer Studionet` (Chain ID: `61999` / `0xF1EF`)
 - **Submission Track**: `Builders` on `portal.genlayer.foundation`
 
 ### Submission Pitch:
-> "AegisGov solves the fundamental counterparty trust problem of the agentic economy: enabling DAOs and capital allocators to lock milestone grants that are autonomously settled or slashed based on real-time GenLayer validator consensus auditing live execution telemetry against immutable constitutional safety specifications."
+> "AegisGov solves the fundamental counterparty trust problem of the agentic economy: an autonomous AI Constitutional Safe-Harbor where capital allocations are verified and settled or slashed based on decentralized GenLayer validator consensus auditing live execution telemetry against cryptographic SHA-256 manifest specifications without centralized platform arbiters."

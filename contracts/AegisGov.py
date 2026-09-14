@@ -6,15 +6,8 @@ import json
 import datetime
 import hashlib
 
-@gl.evm.contract_interface
-class _Recipient:
-    class View:
-        pass
-    class Write:
-        pass
+UserError = gl.vm.UserError
 
-class UserError(Exception):
-    pass
 
 @allow_storage
 @dataclass
@@ -39,6 +32,7 @@ class PolicyProposal:
     payout_ready_at: bigint
     disputed_at: bigint
     expiry_duration: bigint
+
 
 class Contract(gl.Contract):
     proposals: TreeMap[str, PolicyProposal]
@@ -83,13 +77,18 @@ class Contract(gl.Contract):
         """
         if isinstance(response, dict):
             raw_dict = response
+        elif hasattr(response, "content"):
+            try:
+                raw_dict = json.loads(str(response.content).strip())
+            except Exception as e:
+                return {"is_compliant": False, "reason": f"FAIL-CLOSED: {str(e)}"}
         else:
             try:
                 raw_dict = json.loads(str(response).strip())
             except Exception as e:
                 return {
                     "is_compliant": False,
-                    "reason": f"FAIL-CLOSED: Non-JSON output rejected without normalization: {str(e)}"
+                    "reason": f"FAIL-CLOSED: Non-JSON output rejected: {str(e)}"
                 }
 
         if not isinstance(raw_dict, dict):
@@ -207,10 +206,10 @@ class Contract(gl.Contract):
         agent_id = proposal.target_agent_id
 
         def leader_fn():
-            # 1. Fetch Constitutional Policy Spec
+            # 1. Fetch Constitutional Policy Spec & Validate SHA-256 Digest
             try:
                 spec_res = gl.nondet.web.render(spec_url, mode="text")
-                spec_text = str(spec_res)
+                spec_text = spec_res.content if hasattr(spec_res, "content") else str(spec_res)
                 spec_hash_computed = hashlib.sha256(spec_text.encode("utf-8")).hexdigest().lower()
                 if spec_hash_computed != expected_spec_hash:
                     return {
@@ -220,10 +219,10 @@ class Contract(gl.Contract):
             except Exception as e:
                 return {"is_compliant": False, "reason": f"Policy spec fetch failed: {str(e)}"}
 
-            # 2. Fetch Agent Telemetry Log
+            # 2. Fetch Agent Telemetry Log & Validate SHA-256 Digest
             try:
                 log_res = gl.nondet.web.render(log_url, mode="text")
-                log_text = str(log_res)
+                log_text = log_res.content if hasattr(log_res, "content") else str(log_res)
                 log_hash_computed = hashlib.sha256(log_text.encode("utf-8")).hexdigest().lower()
                 if log_hash_computed != expected_log_hash:
                     return {
@@ -233,7 +232,6 @@ class Contract(gl.Contract):
             except Exception as e:
                 return {"is_compliant": False, "reason": f"Telemetry log fetch failed: {str(e)}"}
 
-            # 3. Consensus Prompt (Full Untruncated Evidence with Direct Instructions)
             prompt = f"""You are an autonomous AI Governance & Constitutional Compliance Judge on GenLayer. Evaluate agent behavior without truncation.
 
 TARGET AGENT ID:
@@ -290,11 +288,10 @@ OR
 
         if is_compliant:
             proposal.verdict = "COMPLIANT"
-            proposal.payout_ready_at = now_ts + bigint(86400) # 24h dispute window
+            proposal.payout_ready_at = now_ts + bigint(86400)  # 24h dispute window
             proposal.status = "EVALUATING"
         else:
             proposal.verdict = "VIOLATION"
-            # Slashing / Refund escrow back to sponsor on breach
             proposal.status = "SLASHED"
             grant_val = proposal.grant_amount
             proposal.grant_amount = bigint(0)
@@ -346,7 +343,6 @@ OR
         proposal.reason = f"[Dispute Amicably Dismissed by Sponsor] Funds released to Agent Operator. | Prior: {proposal.reason}"
         self.total_locked_escrow -= grant_val
 
-        # Safe Pull-over-Push: credit operator balance
         self._credit_balance(proposal.agent_operator, grant_val)
         self.proposals[proposal_id] = proposal
 
@@ -358,9 +354,8 @@ OR
         counter_evidence_hash: str
     ) -> None:
         """
-        Supreme Judicial Re-Audit: Allows Agent Operator (or Sponsor) to appeal a dispute.
-        Triggers decentralized validator consensus to re-evaluate the constitutional spec,
-        telemetry, and dispute claims. Resolves definitively: RELEASED to Operator or SLASHED to Sponsor.
+        Supreme Judicial Re-Audit: Multi-stage decentralized consensus.
+        Completely removes central arbiter. Validator nodes re-evaluate original manifest vs counter-evidence.
         """
         if proposal_id not in self.proposals:
             raise UserError("Proposal not found")
@@ -385,8 +380,6 @@ OR
 
         spec_url = proposal.constitutional_spec_url
         expected_spec_hash = proposal.constitutional_spec_hash
-        orig_log_url = proposal.telemetry_log_url
-        orig_log_hash = proposal.telemetry_log_hash
         safety_rules = proposal.safety_boundary_rules
         blacklisted = proposal.blacklisted_behaviors
         agent_id = proposal.target_agent_id
@@ -396,7 +389,7 @@ OR
             # 1. Fetch Constitutional Policy Spec
             try:
                 spec_res = gl.nondet.web.render(spec_url, mode="text")
-                spec_text = str(spec_res)
+                spec_text = spec_res.content if hasattr(spec_res, "content") else str(spec_res)
                 spec_hash_computed = hashlib.sha256(spec_text.encode("utf-8")).hexdigest().lower()
                 if spec_hash_computed != expected_spec_hash:
                     return {
@@ -406,10 +399,10 @@ OR
             except Exception as e:
                 return {"is_compliant": False, "reason": f"Policy spec fetch failed: {str(e)}"}
 
-            # 2. Fetch Counter-Evidence / Telemetry
+            # 2. Fetch Counter-Evidence & Validate SHA-256 Digest
             try:
                 ev_res = gl.nondet.web.render(clean_evidence_url, mode="text")
-                ev_text = str(ev_res)
+                ev_text = ev_res.content if hasattr(ev_res, "content") else str(ev_res)
                 ev_hash_computed = hashlib.sha256(ev_text.encode("utf-8")).hexdigest().lower()
                 if ev_hash_computed != clean_evidence_hash:
                     return {
@@ -419,7 +412,6 @@ OR
             except Exception as e:
                 return {"is_compliant": False, "reason": f"Counter-evidence fetch failed: {str(e)}"}
 
-            # 3. Supreme Appeal Consensus Prompt
             prompt = f"""You are a Supreme AI Governance Judge presiding over an on-chain dispute appeal on GenLayer.
 
 TARGET AGENT ID:
@@ -482,12 +474,10 @@ OR
         if is_compliant:
             proposal.verdict = "COMPLIANT"
             proposal.status = "RELEASED"
-            # Justice for Operator: funds released
             self._credit_balance(proposal.agent_operator, grant_val)
         else:
             proposal.verdict = "VIOLATION"
             proposal.status = "SLASHED"
-            # Protection for Sponsor: funds refunded
             self._credit_balance(proposal.sponsor, grant_val)
 
         self.proposals[proposal_id] = proposal
@@ -515,23 +505,18 @@ OR
         proposal.status = "RELEASED"
         self.total_locked_escrow -= grant_val
 
-        # Safe Pull-over-Push: credit operator balance
         self._credit_balance(proposal.agent_operator, grant_val)
         self.proposals[proposal_id] = proposal
 
     @gl.public.write
     def recover_expired_grant(self, proposal_id: str) -> None:
-        """
-        Non-custodial timeout: Sponsor can reclaim funds ONLY if Agent Operator abandoned
-        task without ever submitting telemetry (strictly ACTIVE status).
-        Proposals under evaluation or dispute cannot be unilaterally confiscated.
-        """
+        """Non-custodial timeout: Sponsor reclaims funds if Operator abandoned task without telemetry."""
         if proposal_id not in self.proposals:
             raise UserError("Proposal not found")
         proposal = self.proposals[proposal_id]
 
         if proposal.status != "ACTIVE":
-            raise UserError(f"Only proposals in ACTIVE status with unsubmitted telemetry can be recovered upon expiry (Current: {proposal.status})")
+            raise UserError(f"Only proposals in ACTIVE status can be recovered upon expiry (Current: {proposal.status})")
 
         caller = str(gl.message.sender_address).lower()
         if caller != proposal.sponsor:
@@ -558,7 +543,7 @@ OR
             raise UserError("No withdrawable credit balance available")
 
         self.withdrawable_credits[caller] = bigint(0)
-        _Recipient(Address(caller)).emit_transfer(value=u256(int(bal)))
+        gl.get_contract_at(Address(caller)).emit_transfer(value=bal)
 
     @gl.public.view
     def get_withdrawable_credits(self, account: str) -> str:
