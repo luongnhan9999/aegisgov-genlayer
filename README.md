@@ -3,7 +3,7 @@
 > **Real-Time Autonomous AI Compliance Court & Smart Grant Escrow on GenLayer Studionet**  
 > *Track: AI Governance / Autonomous Safe-Harbor | Builder Program Submission*
 > 
-> 🌐 **Live App**: [https://aegisgov-genlayer.vercel.app](https://aegisgov-genlayer.vercel.app)  
+> 🌐 **Live App**: [https://frontend-five-alpha-43.vercel.app](https://frontend-five-alpha-43.vercel.app) (mirror: [https://aegisgov-genlayer.vercel.app](https://aegisgov-genlayer.vercel.app))  
 > 📜 **Deployed Contract**: [`0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32`](https://genlayer-explorer.vercel.app/address/0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32)  
 > 🔍 **GenLayer Explorer**: [https://genlayer-explorer.vercel.app/address/0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32](https://genlayer-explorer.vercel.app/address/0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32)  
 > 📦 **GitHub Repository**: [https://github.com/luongnhan9999/aegisgov-genlayer](https://github.com/luongnhan9999/aegisgov-genlayer)
