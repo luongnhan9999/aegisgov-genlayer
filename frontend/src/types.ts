@@ -95,6 +95,6 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
 export const INITIAL_PROPOSALS: PolicyProposal[] = [];
 
 export const DEFAULT_CONTRACT_ADDRESS =
-  import.meta.env.VITE_AEGIS_CONTRACT_ADDRESS ||
   import.meta.env.VITE_CONTRACT_ADDRESS ||
-  '';
+  import.meta.env.VITE_AEGIS_CONTRACT_ADDRESS ||
+  '0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32';

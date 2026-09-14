@@ -3,8 +3,10 @@
 > **Real-Time Autonomous AI Compliance Court & Smart Grant Escrow on GenLayer Studionet**  
 > *Track: AI Governance / Autonomous Safe-Harbor | Builder Program Submission*
 > 
-> 🌐 **Live Web3 DApp**: [https://aegisgov.vercel.app](https://aegisgov.vercel.app)  
-> 📦 **GitHub Repository**: [https://github.com/luongnhan9999/AegisGov](https://github.com/luongnhan9999/AegisGov)
+> 🌐 **Live App**: [https://aegisgov-genlayer.vercel.app](https://aegisgov-genlayer.vercel.app)  
+> 📜 **Deployed Contract**: [`0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32`](https://genlayer-explorer.vercel.app/address/0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32)  
+> 🔍 **GenLayer Explorer**: [https://genlayer-explorer.vercel.app/address/0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32](https://genlayer-explorer.vercel.app/address/0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32)  
+> 📦 **GitHub Repository**: [https://github.com/luongnhan9999/aegisgov-genlayer](https://github.com/luongnhan9999/aegisgov-genlayer)
 
 ---
 
@@ -156,10 +158,10 @@ AegisGov/
    ```
 5. Click **Deploy Contract**.
    - Constructor parameters: None (uses default `__init__`).
-6. Sign the deployment transaction using MetaMask on **GenLayer Studionet** (Chain ID: `0x1048b` / `66699`).
+6. Sign the deployment transaction using MetaMask on **GenLayer Studionet** (Chain ID: `61999` / `0xF1EF`).
 7. Copy the deployed contract address and set it in `frontend/.env`:
    ```bash
-   VITE_AEGIS_CONTRACT_ADDRESS=<YOUR_DEPLOYED_CONTRACT_ADDRESS>
+   VITE_CONTRACT_ADDRESS=0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32
    ```
 
 ---
@@ -184,6 +186,9 @@ python -m unittest discover -s tests -p "test_*.py" -v
 9. `test_09_recover_expired_grant`: Proves non-custodial timeout reclamation for abandoned proposals.
 10. `test_10_parse_llm_json_fail_closed_adversarial`: Verifies fail-closed resilience against hostile/corrupted LLM outputs.
 11. `test_11_views_and_zero_credit_withdrawal`: Tests view methods and zero-balance withdrawal prevention.
+12. `test_12_dismiss_dispute_and_release`: Proves Sponsor can voluntarily dismiss dispute and release escrow to Operator.
+13. `test_13_appeal_and_reaudit_flow`: Proves Operator appeal & re-audit flow with definitive validator consensus ruling.
+14. `test_14_protection_cannot_recover_expired_when_disputed`: Proves Sponsor cannot expire and confiscate escrow while in dispute.
 
 ---
 
@@ -212,13 +217,15 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## 📝 Submission Registration Information
 
-- **Project Name**: `AegisGov`
-- **Live Web3 DApp URL**: [https://aegisgov.vercel.app](https://aegisgov.vercel.app)
-- **GitHub Repository**: [https://github.com/luongnhan9999/AegisGov](https://github.com/luongnhan9999/AegisGov)
+- **Project Name**: `aegisgov-genlayer`
+- **Live App**: [https://aegisgov-genlayer.vercel.app](https://aegisgov-genlayer.vercel.app)
+- **GitHub Repository (Public)**: [https://github.com/luongnhan9999/aegisgov-genlayer](https://github.com/luongnhan9999/aegisgov-genlayer)
+- **Deployed Contract (Studionet)**: [`0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32`](https://genlayer-explorer.vercel.app/address/0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32)
+- **Explorer Link**: [https://genlayer-explorer.vercel.app/address/0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32](https://genlayer-explorer.vercel.app/address/0x5B1162A178715Bb6a11D0BCcdf1Cb75Da8A7EC32)
 - **Primary Tag**: `AI Governance / Autonomous Safe-Harbor`
 - **Tag 1**: `Constitutional-AI`
 - **Tag 2**: `Smart-Escrow`
-- **Target Network**: `GenLayer Studionet` (Studio hosted)
+- **Target Network**: `GenLayer Studionet` (Chain ID: `61999` / `0xF1EF`)
 - **Submission Track**: `Builders` on `portal.genlayer.foundation`
 
 ### Submission Pitch:

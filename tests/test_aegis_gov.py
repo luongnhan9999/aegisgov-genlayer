@@ -96,13 +96,13 @@ class TestAegisGovStandards(unittest.TestCase):
         self.gl.message_raw = {"datetime": "2026-09-14T12:00:00+00:00"}
 
     def test_01_strict_zero_normalization_json(self):
-        """Chứng minh parser loại bỏ normalization và fail-closed khi gặp markdown fence hoặc Python booleans."""
-        # 1. Thất bại nếu LLM trả về markdown code fence
+        """Verify parser rejects normalization and fails closed upon markdown fences or non-canonical JSON."""
+        # 1. Fail if LLM returns markdown code fences
         raw_markdown = "```json\n{\"is_compliant\": true, \"reason\": \"clean execution\"}\n```"
         with self.assertRaises(Exception):
-            json.loads(raw_markdown) # Trực tiếp fail, không qua strip
+            json.loads(raw_markdown) # Fails directly without heuristic stripping
 
-        # 2. Thành công với JSON chuẩn hóa nguyên bản
+        # 2. Succeed with canonical pure JSON
         valid_canonical = '{"is_compliant": true, "reason": "All safety boundaries preserved"}'
         parsed = json.loads(valid_canonical)
         self.assertIsInstance(parsed, dict)
@@ -110,18 +110,21 @@ class TestAegisGovStandards(unittest.TestCase):
         self.assertIsInstance(parsed["is_compliant"], bool)
 
     def test_02_evidence_hash_integrity(self):
-        """Chứng minh tính toán SHA-256 đối soát chính xác 100% dữ liệu gốc."""
+        """Verify SHA-256 evidence integrity matches 100% against untampered source data."""
         spec_content = "Constitutional Safety Policy: AI Agent must not execute external shell scripts."
         expected_hash = hashlib.sha256(spec_content.encode("utf-8")).hexdigest().lower()
-        self.assertEqual(len(expected_hash), 64)
 
-        # Mô phỏng tamper
+        # Same content generates exact same hash
+        computed_hash = hashlib.sha256(spec_content.encode("utf-8")).hexdigest().lower()
+        self.assertEqual(expected_hash, computed_hash)
+
+        # Minor modification causes immediate hash mismatch
         tampered_content = spec_content + " "
         computed_hash = hashlib.sha256(tampered_content.encode("utf-8")).hexdigest().lower()
         self.assertNotEqual(expected_hash, computed_hash)
 
     def test_03_deterministic_execution_context(self):
-        """Chứng minh _now() trích xuất timestamp xác định từ gl.message_raw['datetime']."""
+        """Verify deterministic timestamp extraction strictly from gl.message_raw['datetime']."""
         c = contract_module.Contract()
         self.gl.message_raw = {"datetime": "2026-09-14T15:30:00+00:00"}
         expected_ts = int(datetime.datetime.fromisoformat("2026-09-14T15:30:00+00:00").timestamp())
@@ -133,12 +136,12 @@ class TestAegisGovStandards(unittest.TestCase):
             c._now()
 
     def test_04_register_governance_grant_validation(self):
-        """Kiểm tra ràng buộc khi tài trợ grant escrow."""
+        """Validate constraints and preconditions when docketing a governance grant escrow."""
         c = contract_module.Contract()
         spec_content = "Agent must never call selfdestruct or withdraw without authorization."
         spec_hash = hashlib.sha256(spec_content.encode("utf-8")).hexdigest().lower()
 
-        # Thất bại khi escrow = 0
+        # Fails when escrow = 0
         self.gl.message.value = MockBigInt(0)
         with self.assertRaises(Exception):
             c.register_governance_grant(
@@ -146,7 +149,7 @@ class TestAegisGovStandards(unittest.TestCase):
                 "https://example.com/spec.txt", spec_hash, "Safe slippage < 2%", "No flashloan reentrancy"
             )
 
-        # Thất bại khi URL không hợp lệ
+        # Fails when URL scheme is invalid
         self.gl.message.value = MockBigInt(1000)
         with self.assertRaises(Exception):
             c.register_governance_grant(
@@ -154,14 +157,14 @@ class TestAegisGovStandards(unittest.TestCase):
                 "ftp://bad-scheme.com", spec_hash, "Safe slippage < 2%", "No flashloan reentrancy"
             )
 
-        # Thất bại khi SHA-256 hash không đủ 64 ký tự hex
+        # Fails when SHA-256 hash length is not 64 hex characters
         with self.assertRaises(Exception):
             c.register_governance_grant(
                 "PROP-01", "AGENT-TRADING-01", "0xoperator2222222222222222222222222222222222",
                 "https://example.com/spec.txt", "short_hash", "Safe slippage < 2%", "No flashloan reentrancy"
             )
 
-        # Thành công
+        # Success case
         c.register_governance_grant(
             "PROP-01", "AGENT-TRADING-01", "0xoperator2222222222222222222222222222222222",
             "https://example.com/spec.txt", spec_hash, "Safe slippage < 2%", "No flashloan reentrancy"
@@ -171,7 +174,7 @@ class TestAegisGovStandards(unittest.TestCase):
         self.assertEqual(c.total_locked_escrow, 1000)
 
     def test_05_submit_compliance_audit_compliant(self):
-        """Kiểm tra luồng audit compliant: vào trạng thái EVALUATING và mở 24h cooling-off."""
+        """Verify compliant audit flow: transitions to EVALUATING and opens 24h cooling-off dispute period."""
         c = contract_module.Contract()
         spec_text = "Standard Operating Procedure: All trades <= $1000."
         spec_hash = hashlib.sha256(spec_text.encode("utf-8")).hexdigest().lower()
@@ -208,7 +211,7 @@ class TestAegisGovStandards(unittest.TestCase):
         self.assertGreater(p.payout_ready_at, p.created_at)
 
     def test_06_tampering_spec_hash_detected(self):
-        """Chứng minh phát hiện ngay khi dữ liệu off-chain bị sửa đổi (tampered)."""
+        """Verify immediate detection and slashing when off-chain spec or telemetry is tampered."""
         c = contract_module.Contract()
         original_spec = "Boundary: do not transfer funds to unlisted addresses."
         registered_hash = hashlib.sha256(original_spec.encode("utf-8")).hexdigest().lower()
@@ -220,7 +223,7 @@ class TestAegisGovStandards(unittest.TestCase):
             "https://example.com/spec.txt", registered_hash, "Strict boundaries", "No theft"
         )
 
-        # Hacker tampers the web spec
+        # Adversary tampers the web spec
         self.gl.nondet.web.render = lambda url, mode="text": "Tampered spec: transfer anywhere!"
 
         self.gl.message.sender_address = MockAddress("0xoperator")
@@ -236,7 +239,7 @@ class TestAegisGovStandards(unittest.TestCase):
         self.assertEqual(c.total_locked_escrow, 0)
 
     def test_07_cooling_off_and_finalize_disbursement(self):
-        """Kiểm tra bảo vệ 24h dispute window và giải ngân an toàn (pull-over-push)."""
+        """Verify 24h dispute window protection and safe pull-over-push settlement."""
         c = contract_module.Contract()
         spec_text = "Spec rules."
         spec_hash = hashlib.sha256(spec_text.encode("utf-8")).hexdigest().lower()
@@ -279,7 +282,7 @@ class TestAegisGovStandards(unittest.TestCase):
         self.assertEqual(self.gl.transfers[0]["value"], 2000)
 
     def test_08_raise_compliance_dispute(self):
-        """Sponsor đóng băng giải ngân khi nghi ngờ trong 24h cooling-off."""
+        """Verify Sponsor can freeze grant payout upon suspicion during 24h cooling-off."""
         c = contract_module.Contract()
         spec_text = "Spec rules."
         spec_hash = hashlib.sha256(spec_text.encode("utf-8")).hexdigest().lower()
@@ -315,7 +318,7 @@ class TestAegisGovStandards(unittest.TestCase):
         self.assertIn("[DISPUTED by Sponsor]", p.reason)
 
     def test_09_recover_expired_grant(self):
-        """Sponsor thu hồi tiền an toàn nếu Agent bỏ dở hoặc quá hạn hợp đồng."""
+        """Verify Sponsor can safely reclaim escrow if agent operator abandons the task."""
         c = contract_module.Contract()
         spec_text = "Spec rules."
         spec_hash = hashlib.sha256(spec_text.encode("utf-8")).hexdigest().lower()
@@ -328,11 +331,11 @@ class TestAegisGovStandards(unittest.TestCase):
             "https://example.com/spec.txt", spec_hash, "Rules", "None", validity_days=MockBigInt(10)
         )
 
-        # 1. Thu hồi sớm trước hạn MUST FAIL
+        # 1. Early reclamation before expiry MUST FAIL
         with self.assertRaises(Exception):
             c.recover_expired_grant("PROP-EXP")
 
-        # 2. Tua thời gian quá 10 ngày
+        # 2. Fast forward time past 10 days
         self.gl.message_raw = {"datetime": "2026-09-26T00:00:00+00:00"}
         c.recover_expired_grant("PROP-EXP")
 
@@ -342,36 +345,36 @@ class TestAegisGovStandards(unittest.TestCase):
         self.assertEqual(c.withdrawable_credits["0xsponsor"], 4000)
 
     def test_10_parse_llm_json_fail_closed_adversarial(self):
-        """Chứng minh parser fail-closed khi LLM cố tình trả về dữ liệu độc hại hoặc định dạng sai."""
+        """Verify parser fails closed when LLM returns adversarial or corrupted data."""
         c = contract_module.Contract()
 
-        # Case A: Trả về string không phải JSON
+        # Case A: Return non-JSON string
         res = c._parse_llm_json("I think the agent is safe!")
         self.assertFalse(res["is_compliant"])
         self.assertIn("FAIL-CLOSED", res["reason"])
 
-        # Case B: Thiếu trường 'is_compliant'
+        # Case B: Missing required 'is_compliant' field
         res = c._parse_llm_json('{"reason": "good agent"}')
         self.assertFalse(res["is_compliant"])
         self.assertIn("Missing required fields", res["reason"])
 
-        # Case C: 'is_compliant' là string thay vì boolean ("true" thay vì true)
+        # Case C: 'is_compliant' is string instead of boolean ("true" instead of True)
         res = c._parse_llm_json('{"is_compliant": "true", "reason": "valid"}')
         self.assertFalse(res["is_compliant"])
         self.assertIn("must be an explicit boolean", res["reason"])
 
-        # Case D: Reason rỗng hoặc toàn khoảng trắng
+        # Case D: Empty reason or whitespace only
         res = c._parse_llm_json('{"is_compliant": true, "reason": "   "}')
         self.assertFalse(res["is_compliant"])
         self.assertIn("must be a non-empty string", res["reason"])
 
-        # Case E: Trả về JSON hợp lệ chuẩn
+        # Case E: Valid canonical JSON
         res = c._parse_llm_json('{"is_compliant": true, "reason": "Verified constitutional integrity"}')
         self.assertTrue(res["is_compliant"])
         self.assertEqual(res["reason"], "Verified constitutional integrity")
 
     def test_11_views_and_zero_credit_withdrawal(self):
-        """Kiểm tra các hàm view và chặn rút tiền khi số dư bằng 0."""
+        """Verify view functions and reject zero-credit balance withdrawals."""
         c = contract_module.Contract()
         spec_hash = hashlib.sha256(b"spec").hexdigest().lower()
         self.gl.message.value = MockBigInt(100)
@@ -389,13 +392,13 @@ class TestAegisGovStandards(unittest.TestCase):
         self.assertEqual(len(all_props), 1)
         self.assertEqual(all_props[0]["id"], "PROP-VIEW")
 
-        # Rút tiền khi chưa có balance phải báo lỗi
+        # Withdraw with 0 balance MUST raise error
         self.gl.message.sender_address = MockAddress("0xzero")
         with self.assertRaises(Exception):
             c.withdraw_credits()
 
     def test_12_dismiss_dispute_and_release(self):
-        """Sponsor tự nguyện rút đơn khiếu nại (dismiss dispute), tiền chuyển về cho Operator."""
+        """Verify Sponsor can voluntarily dismiss dispute, releasing escrow to Operator."""
         c = contract_module.Contract()
         spec_text = "Spec rules"
         spec_hash = hashlib.sha256(spec_text.encode("utf-8")).hexdigest().lower()
@@ -438,7 +441,7 @@ class TestAegisGovStandards(unittest.TestCase):
         self.assertEqual(c.total_locked_escrow, 0)
 
     def test_13_appeal_and_reaudit_flow(self):
-        """Operator kháng cáo tranh chấp (appeal & re-audit) và hội đồng validator xét xử chung thẩm."""
+        """Verify Operator appeal & re-audit flow with definitive validator consensus ruling."""
         c = contract_module.Contract()
         spec_text = "Constitutional Spec"
         spec_hash = hashlib.sha256(spec_text.encode("utf-8")).hexdigest().lower()
@@ -487,7 +490,7 @@ class TestAegisGovStandards(unittest.TestCase):
         self.assertEqual(c.total_locked_escrow, 0)
 
     def test_14_protection_cannot_recover_expired_when_disputed(self):
-        """Bảo vệ Operator: Sponsor KHÔNG THỂ đợi hết hạn hợp đồng để cuỗm tiền khi đang DISPUTED."""
+        """Verify Operator protection: Sponsor CANNOT expire and confiscate escrow while DISPUTED."""
         c = contract_module.Contract()
         spec_text = "Spec rules"
         spec_hash = hashlib.sha256(spec_text.encode("utf-8")).hexdigest().lower()
