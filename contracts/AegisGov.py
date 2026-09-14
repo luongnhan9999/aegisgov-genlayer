@@ -50,9 +50,6 @@ class Contract(gl.Contract):
     def __init__(self):
         self.owner = str(gl.message.sender_address).lower()
         self.total_locked_escrow = bigint(0)
-        self.proposals = TreeMap()
-        self.proposal_ids = DynArray()
-        self.withdrawable_credits = TreeMap()
 
     def _credit_balance(self, account: str, amount: bigint) -> None:
         acc = str(account).lower()
