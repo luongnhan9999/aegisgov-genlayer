@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ShieldPlus, Hash, Sparkles, AlertCircle } from 'lucide-react';
+import type { DemoScenario } from '../types';
 import { computeSha256 } from '../utils/format';
 
 interface RegisterModalProps {
@@ -17,6 +18,7 @@ interface RegisterModalProps {
     validityDays: number;
   }) => Promise<void>;
   isLoading: boolean;
+  initialScenario?: DemoScenario | null;
 }
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({
@@ -24,12 +26,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   onClose,
   onRegister,
   isLoading,
+  initialScenario,
 }) => {
   const [proposalId, setProposalId] = useState(`PROP-${Math.floor(1000 + Math.random() * 9000)}`);
   const [targetAgentId, setTargetAgentId] = useState('AGENT-AUTONOMOUS-TRADER-01');
   const [agentOperator, setAgentOperator] = useState('0x70997970C51812dc3A010C7d01b50e0d17dc79C8');
-  const [grantAmountGen, setGrantAmountGen] = useState('2000');
-  const [specUrl, setSpecUrl] = useState('https://gist.githubusercontent.com/genlayer-dao/specs/main/treasury_guardrails.txt');
+  const [grantAmountGen, setGrantAmountGen] = useState('1.0');
+  const [specUrl, setSpecUrl] = useState('https://raw.githubusercontent.com/ethereum/annotated-spec/master/phase0/beacon-chain.md');
   const [specHash, setSpecHash] = useState('a4f8d39c018274d89a27e69f835b31d87192a54332cefc27301c20172e591244');
   const [safetyRules, setSafetyRules] = useState('Max leverage <= 1.5x. Slippage < 0.5%. Whitelisted liquidity pools only.');
   const [blacklisted, setBlacklisted] = useState('No flashloan exploits, no unauthorized private key export, no mempool sandwich attacks.');
@@ -38,6 +41,20 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [rawSpecText, setRawSpecText] = useState('');
   const [isHashing, setIsHashing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Load preset scenario when passed
+  useEffect(() => {
+    if (initialScenario) {
+      setProposalId(`PROP-${initialScenario.target_agent_id.slice(-8)}-${Math.floor(100 + Math.random() * 900)}`);
+      setTargetAgentId(initialScenario.target_agent_id);
+      setAgentOperator(initialScenario.agent_operator);
+      setGrantAmountGen(initialScenario.grant_amount_gen);
+      setSpecUrl(initialScenario.spec_url);
+      setSpecHash(initialScenario.spec_hash);
+      setSafetyRules(initialScenario.safety_boundaries);
+      setBlacklisted(initialScenario.blacklisted_behaviors);
+    }
+  }, [initialScenario, isOpen]);
 
   if (!isOpen) return null;
 
@@ -103,7 +120,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-bold text-white tracking-tight">Register Governance Grant</h2>
-              <p className="text-xs text-slate-400">Lock DAO milestone escrow governed by Constitutional AI consensus</p>
+              <p className="text-xs text-slate-400">Lock real DAO milestone escrow on GenLayer Studionet</p>
             </div>
           </div>
           <button
@@ -113,6 +130,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        {initialScenario && (
+          <div className="mt-4 p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs text-cyan-300 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 shrink-0 text-cyan-400" />
+            <span>Preset loaded: <strong>{initialScenario.title}</strong></span>
+          </div>
+        )}
 
         {errorMsg && (
           <div className="mt-4 p-3 rounded-xl bg-rose-950/50 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
@@ -170,7 +194,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 value={grantAmountGen}
                 onChange={(e) => setGrantAmountGen(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-cyan-500 focus:outline-none"
-                placeholder="2000"
+                placeholder="1.0"
                 required
               />
             </div>
@@ -281,7 +305,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               disabled={isLoading}
               className="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold shadow-lg shadow-cyan-500/25 transition disabled:opacity-50 flex items-center gap-2"
             >
-              {isLoading ? 'Locking Escrow on Studionet...' : 'Lock Grant Escrow'}
+              {isLoading ? 'Signing & Locking Escrow...' : 'Lock Grant Escrow (Sign with MetaMask)'}
             </button>
           </div>
         </form>

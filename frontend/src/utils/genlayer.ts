@@ -4,7 +4,7 @@ import type { PolicyProposal } from '../types';
 
 export type GenLayerNetwork = 'studionet' | 'localnet' | 'testnetBradbury';
 
-export function getGenLayerChain(network: GenLayerNetwork) {
+export function getGenLayerChain(network: GenLayerNetwork = 'studionet') {
   switch (network) {
     case 'localnet':
       return localnet;
@@ -16,17 +16,23 @@ export function getGenLayerChain(network: GenLayerNetwork) {
   }
 }
 
-export function getGenLayerClient(network: GenLayerNetwork = 'studionet', rpcUrl?: string) {
+export function getGenLayerClient(
+  network: GenLayerNetwork = 'studionet',
+  rpcUrl?: string,
+  userAccount?: string
+) {
   const chain = getGenLayerChain(network);
   return createClient({
     chain,
     endpoint: rpcUrl || undefined,
     provider: typeof window !== 'undefined' ? window.ethereum : undefined,
+    // When an address string is passed, genlayer-js instructs MetaMask to sign
+    account: userAccount ? (userAccount as `0x${string}`) : undefined,
   });
 }
 
 /**
- * Fetch all proposals from AegisGov contract
+ * Fetch all proposals from AegisGov intelligent contract on-chain
  */
 export async function readProposalsFromChain(
   contractAddress: string,
@@ -56,7 +62,7 @@ export async function readProposalsFromChain(
     const parsed = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
 
     if (Array.isArray(parsed)) {
-      // Also fetch detailed fields for each proposal
+      // Parallel fetch full proposal details for each proposal ID
       const detailedProposals = await Promise.all(
         parsed.map(async (p: any) => {
           try {
@@ -151,7 +157,7 @@ export async function readWithdrawableCredits(
 }
 
 /**
- * Execute contract transaction on GenLayer Studionet and await finality
+ * Execute real transaction on GenLayer Studionet and await validator finality
  */
 export async function writeContractOnChain(
   contractAddress: string,
@@ -159,9 +165,12 @@ export async function writeContractOnChain(
   args: any[],
   valueWei: string = '0',
   network: GenLayerNetwork = 'studionet',
-  account?: string
+  account?: string,
+  onStageChange?: (stage: string) => void
 ): Promise<{ txHash: string; status: string }> {
-  const client = getGenLayerClient(network);
+  if (onStageChange) onStageChange('Requesting MetaMask signature...');
+  const client = getGenLayerClient(network, undefined, account);
+
   try {
     const txHash = await client.writeContract({
       address: contractAddress as `0x${string}`,
@@ -171,20 +180,23 @@ export async function writeContractOnChain(
       account: account ? ({ address: account as `0x${string}` } as any) : undefined,
     });
 
-    console.log(`[AegisGov] Transaction submitted: ${txHash}. Awaiting validator consensus...`);
-    
+    console.log(`[AegisGov On-Chain] Transaction hash: ${txHash}`);
+    if (onStageChange) onStageChange('Transaction broadcasted! Awaiting GenLayer validator consensus...');
+
     const receipt = await client.waitForTransactionReceipt({
       hash: txHash,
       status: 'ACCEPTED' as any,
     });
 
-    console.log(`[AegisGov] Consensus finality reached: ${receipt.statusName || receipt.status}`);
+    console.log(`[AegisGov On-Chain] Finality reached! Status: ${receipt.statusName || receipt.status}`);
+    if (onStageChange) onStageChange('Consensus Finalized on GenLayer Studionet!');
+
     return {
       txHash: String(txHash),
       status: String(receipt.statusName || receipt.status),
     };
   } catch (error) {
-    console.error(`[AegisGov] Transaction failed (${functionName}):`, error);
+    console.error(`[AegisGov On-Chain] Transaction failed (${functionName}):`, error);
     throw error;
   }
 }

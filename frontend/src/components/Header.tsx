@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Shield, ShieldAlert, Wallet, ExternalLink, Cpu, CheckCircle2, Copy } from 'lucide-react';
+import { Shield, Wallet, Cpu, CheckCircle2, Copy } from 'lucide-react';
 import { shortenAddress } from '../utils/format';
 
 interface HeaderProps {
   account: string;
+  walletBalance: string;
   isConnecting: boolean;
   onConnectWallet: () => void;
   contractAddress: string;
@@ -13,6 +14,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   account,
+  walletBalance,
   isConnecting,
   onConnectWallet,
   contractAddress,
@@ -35,7 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="border-b border-slate-800/80 bg-[#0c1222]/80 backdrop-blur-md sticky top-0 z-40">
+    <header className="border-b border-slate-800/80 bg-[#0c1222]/90 backdrop-blur-md sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Brand & Protocol Tag */}
         <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
@@ -64,9 +66,12 @@ export const Header: React.FC<HeaderProps> = ({
 
           <div className="md:hidden">
             {account ? (
-              <span className="px-2.5 py-1 text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg">
-                {shortenAddress(account)}
-              </span>
+              <div className="flex flex-col items-end text-right">
+                <span className="text-[10px] font-mono text-cyan-400 font-bold">{walletBalance}</span>
+                <span className="px-2 py-0.5 text-[11px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg">
+                  {shortenAddress(account)}
+                </span>
+              </div>
             ) : (
               <button
                 onClick={onConnectWallet}
@@ -85,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-slate-700/60 text-slate-300 shadow-inner">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span className="font-medium text-slate-200">GenLayer Studionet</span>
-            <span className="text-slate-500 font-mono">(0x1048b)</span>
+            <span className="text-slate-500 font-mono">(61999)</span>
           </div>
 
           {/* Contract Address Pill */}
@@ -119,15 +124,17 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="font-mono text-cyan-300">
                   {contractAddress && contractAddress !== '0x0000000000000000000000000000000000000000'
                     ? shortenAddress(contractAddress, 4)
-                    : 'Demo / Unset'}
+                    : 'Not Configured (Click Edit)'}
                 </span>
-                <button
-                  onClick={handleCopy}
-                  title="Copy contract address"
-                  className="text-slate-400 hover:text-slate-200"
-                >
-                  {copied ? <CheckCircle2 className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                </button>
+                {contractAddress && contractAddress !== '0x0000000000000000000000000000000000000000' && (
+                  <button
+                    onClick={handleCopy}
+                    title="Copy contract address"
+                    className="text-slate-400 hover:text-slate-200"
+                  >
+                    {copied ? <CheckCircle2 className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setTempAddress(contractAddress);
@@ -142,14 +149,21 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Right: Wallet Connection */}
+        {/* Right: Wallet Connection & Real Balance */}
         <div className="hidden md:flex items-center gap-3">
           {account ? (
-            <div className="flex items-center gap-2 bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-1.5 shadow-sm">
-              <div className="h-2 w-2 rounded-full bg-emerald-400"></div>
-              <div className="flex flex-col text-left">
-                <span className="text-[10px] text-slate-400 font-medium">MetaMask (Studionet)</span>
-                <span className="font-mono text-xs text-slate-200">{shortenAddress(account, 5)}</span>
+            <div className="flex items-center gap-3 bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-1.5 shadow-sm">
+              <div className="text-right">
+                <span className="text-[10px] text-slate-400 block font-medium">Studionet Balance</span>
+                <span className="font-mono text-xs font-bold text-cyan-400">{walletBalance}</span>
+              </div>
+              <div className="h-7 w-[1px] bg-slate-800"></div>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-emerald-400"></div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] text-slate-400 font-medium">MetaMask</span>
+                  <span className="font-mono text-xs text-slate-200">{shortenAddress(account, 5)}</span>
+                </div>
               </div>
             </div>
           ) : (
@@ -159,7 +173,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium text-xs shadow-lg shadow-cyan-500/25 transition disabled:opacity-50"
             >
               <Wallet className="h-4 w-4" />
-              {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+              {isConnecting ? 'Connecting...' : 'Connect MetaMask'}
             </button>
           )}
         </div>
