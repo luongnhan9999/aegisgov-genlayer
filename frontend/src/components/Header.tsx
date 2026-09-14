@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Shield, Wallet, Cpu, CheckCircle2, Copy, Sparkles, Scale, 
-  LogOut, ChevronDown, RefreshCw, ExternalLink, Check
+  LogOut, ChevronDown, RefreshCw, ExternalLink, Check, AlertTriangle, Zap
 } from 'lucide-react';
 import { shortenAddress } from '../utils/format';
 
@@ -15,6 +15,8 @@ interface HeaderProps {
   contractAddress: string;
   onUpdateContractAddress: (address: string) => void;
   network: string;
+  isWrongNetwork?: boolean;
+  onSwitchNetwork?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -27,6 +29,8 @@ export const Header: React.FC<HeaderProps> = ({
   contractAddress,
   onUpdateContractAddress,
   network,
+  isWrongNetwork = false,
+  onSwitchNetwork,
 }) => {
   const [isEditingContract, setIsEditingContract] = useState(false);
   const [tempAddress, setTempAddress] = useState(contractAddress);
@@ -143,12 +147,26 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Center: Network and Contract Info */}
         <div className="flex flex-wrap items-center gap-2.5 text-xs">
-          {/* Network Pill */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-amber-500/20 text-slate-300 shadow-inner">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="font-semibold text-slate-200">Studionet</span>
-            <span className="text-amber-400/80 font-mono text-[11px]">(Chain 61999)</span>
-          </div>
+          {/* Network Pill / Wrong Network Switcher */}
+          {isWrongNetwork ? (
+            <button
+              onClick={onSwitchNetwork}
+              title="Click to switch MetaMask to GenLayer Studionet (GEN)"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-950/90 border border-rose-500/60 text-rose-200 hover:bg-rose-900 transition shadow-lg shadow-rose-900/30 cursor-pointer animate-pulse"
+            >
+              <AlertTriangle className="h-3.5 w-3.5 text-rose-400" />
+              <span className="font-bold text-rose-200">Wrong Network</span>
+              <span className="text-amber-300 font-mono text-[11px] underline flex items-center gap-1">
+                <Zap className="h-3 w-3 inline" /> Switch to GEN
+              </span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-amber-500/20 text-slate-300 shadow-inner">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="font-semibold text-slate-200">Studionet</span>
+              <span className="text-amber-400/80 font-mono text-[11px]">(GEN Token · 61999)</span>
+            </div>
+          )}
 
           {/* Contract Address Pill */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-300">

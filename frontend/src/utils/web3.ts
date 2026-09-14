@@ -20,24 +20,56 @@ export const STUDIONET_CHAIN_ID_HEX = '0x' + STUDIONET_CHAIN_ID_NUM.toString(16)
 
 export const STUDIONET_CHAIN_CONFIG = {
   chainId: STUDIONET_CHAIN_ID_HEX,
-  chainName: 'Genlayer Studio Network',
+  chainName: 'GenLayer Studionet',
   nativeCurrency: {
     name: 'GEN Token',
     symbol: 'GEN',
     decimals: 18,
   },
   rpcUrls: ['https://studio.genlayer.com/api'],
-  blockExplorerUrls: ['https://studio.genlayer.com'],
+  blockExplorerUrls: ['https://genlayer-explorer.vercel.app'],
 };
 
 const STORAGE_ACCOUNT_KEY = 'aegisgov_wallet_account';
 const STORAGE_PROVIDER_KEY = 'aegisgov_wallet_provider';
 
 /**
+ * Get active chainId from MetaMask
+ */
+export async function getConnectedChainId(): Promise<string | null> {
+  if (typeof window === 'undefined' || !window.ethereum) return null;
+  try {
+    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+    return chainId ? String(chainId).toLowerCase() : null;
+  } catch (err) {
+    console.warn('Failed to query chainId from provider:', err);
+    return null;
+  }
+}
+
+/**
+ * Check if the given chainId corresponds to GenLayer Studionet
+ */
+export function isStudionetChain(chainId: string | null): boolean {
+  if (!chainId) return false;
+  const clean = chainId.toLowerCase();
+  return clean === STUDIONET_CHAIN_ID_HEX.toLowerCase() || clean === '0xf1ef' || clean === '61999';
+}
+
+/**
  * Ensure user's MetaMask is connected to GenLayer Studionet
  */
 export async function ensureStudionetNetwork(): Promise<void> {
   if (typeof window === 'undefined' || !window.ethereum) return;
+
+  try {
+    const currentChain = await getConnectedChainId();
+    if (isStudionetChain(currentChain)) {
+      return; // Already on GenLayer Studionet
+    }
+  } catch (e) {
+    // Continue to attempt switch
+  }
 
   try {
     await window.ethereum.request({
@@ -49,7 +81,9 @@ export async function ensureStudionetNetwork(): Promise<void> {
     if (
       switchError.code === 4902 ||
       switchError.code === -32603 ||
-      switchError?.data?.originalError?.code === 4902
+      switchError?.data?.originalError?.code === 4902 ||
+      String(switchError?.message || '').toLowerCase().includes('unrecognized') ||
+      String(switchError?.message || '').toLowerCase().includes('wallet_addethereumchain')
     ) {
       try {
         await window.ethereum.request({
@@ -58,7 +92,7 @@ export async function ensureStudionetNetwork(): Promise<void> {
         });
       } catch (addError) {
         console.warn('Failed to add GenLayer Studionet to MetaMask:', addError);
-        throw new Error('Please authorize adding GenLayer Studionet to MetaMask.');
+        throw new Error('Please authorize adding GenLayer Studionet (GEN) to MetaMask.');
       }
     } else {
       console.warn('Failed to switch to Studionet:', switchError);

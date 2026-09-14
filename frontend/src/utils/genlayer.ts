@@ -156,6 +156,8 @@ export async function readWithdrawableCredits(
   }
 }
 
+import { ensureStudionetNetwork } from './web3';
+
 /**
  * Execute real transaction on GenLayer Studionet and await validator finality
  */
@@ -168,7 +170,11 @@ export async function writeContractOnChain(
   account?: string,
   onStageChange?: (stage: string) => void
 ): Promise<{ txHash: string; status: string }> {
-  if (onStageChange) onStageChange('Requesting MetaMask signature...');
+  // CRITICAL: Force MetaMask network to GenLayer Studionet (Chain 61999) before requesting signature
+  if (onStageChange) onStageChange('Verifying GenLayer Studionet network (GEN)...');
+  await ensureStudionetNetwork();
+
+  if (onStageChange) onStageChange('Requesting MetaMask signature with GEN tokens...');
   const client = getGenLayerClient(network, undefined, account);
 
   try {

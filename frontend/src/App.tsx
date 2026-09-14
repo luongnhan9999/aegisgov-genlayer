@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Shield, Plus, RefreshCw, AlertCircle, CheckCircle2, 
   ExternalLink, Layers, Search, Sparkles, Terminal, ChevronDown, ChevronUp,
-  Scale, Landmark, ShieldCheck, Lock, Gavel
+  Scale, Landmark, ShieldCheck, Lock, Gavel, AlertTriangle, Zap
 } from 'lucide-react';
 import { Header } from './components/Header';
 import { StatsBar } from './components/StatsBar';
@@ -22,7 +22,10 @@ import {
   autoCheckWalletConnection, 
   setupWalletListeners,
   fetchWalletBalance,
-  disconnectWalletSession
+  disconnectWalletSession,
+  getConnectedChainId,
+  isStudionetChain,
+  ensureStudionetNetwork
 } from './utils/web3';
 import { 
   readProposalsFromChain, 
@@ -38,6 +41,9 @@ export const App: React.FC = () => {
   const [contractAddress, setContractAddress] = useState<string>(() => {
     return localStorage.getItem('aegisgov_contract_address') || DEFAULT_CONTRACT_ADDRESS;
   });
+
+  const [currentChainId, setCurrentChainId] = useState<string | null>(null);
+  const isWrongNetwork = !!(account && currentChainId && !isStudionetChain(currentChainId));
 
   const [proposals, setProposals] = useState<PolicyProposal[]>([]);
   const [withdrawableCredits, setWithdrawableCredits] = useState<string>('0');
@@ -73,9 +79,35 @@ export const App: React.FC = () => {
     setDiagnosticLogs((prev) => [`[${timestamp}] ${msg}`, ...prev.slice(0, 30)]);
   };
 
-  // Auto-connect wallet on load
+  // Switch MetaMask to GenLayer Studionet (GEN)
+  const handleSwitchNetwork = async () => {
+    try {
+      addLog('Requesting MetaMask switch to GenLayer Studionet (Chain 61999, Currency: GEN)...');
+      await ensureStudionetNetwork();
+      const chain = await getConnectedChainId();
+      setCurrentChainId(chain);
+      if (account) {
+        const bal = await fetchWalletBalance(account);
+        setWalletBalance(bal);
+      }
+      addLog('MetaMask successfully aligned to GenLayer Studionet (GEN)!');
+    } catch (err: any) {
+      addLog(`[Network Switch Error]: ${err.message}`);
+      alert(err.message || 'Failed to switch network to GenLayer Studionet.');
+    }
+  };
+
+  // Auto-connect wallet on load & check network
   useEffect(() => {
     addLog('AegisGov Court session initialized. Querying GenLayer Studionet (Chain 61999)...');
+    
+    getConnectedChainId().then((chain) => {
+      setCurrentChainId(chain);
+      if (chain && !isStudionetChain(chain)) {
+        addLog(`[Network Warning] MetaMask is connected to chain ${chain}. Switch to GenLayer Studionet (61999) to transact with GEN.`);
+      }
+    });
+
     autoCheckWalletConnection().then(({ address, balance }) => {
       if (address) {
         setAccount(address);
@@ -99,6 +131,10 @@ export const App: React.FC = () => {
       },
       (chainId) => {
         addLog(`MetaMask active chain changed: ${chainId}`);
+        setCurrentChainId(chainId);
+        if (account) {
+          fetchWalletBalance(account).then(setWalletBalance);
+        }
       }
     );
     return cleanup;
@@ -145,11 +181,13 @@ export const App: React.FC = () => {
   // Connect Wallet
   const handleConnectWallet = async () => {
     setIsConnecting(true);
-    addLog('Requesting MetaMask authorization on Studionet...');
+    addLog('Requesting MetaMask authorization on Studionet (GEN)...');
     try {
       const { address, balance } = await connectMetaMaskWallet();
       setAccount(address);
       setWalletBalance(balance);
+      const chain = await getConnectedChainId();
+      setCurrentChainId(chain);
       addLog(`Wallet attached: ${address} | Balance: ${balance}`);
     } catch (err: any) {
       addLog(`[Auth Error] ${err.message}`);
@@ -593,7 +631,43 @@ export const App: React.FC = () => {
         contractAddress={contractAddress}
         onUpdateContractAddress={handleUpdateContract}
         network="studionet"
+        isWrongNetwork={isWrongNetwork}
+        onSwitchNetwork={handleSwitchNetwork}
       />
+
+      {/* Wrong Network Warning Banner */}
+      {isWrongNetwork && (
+        <div className="bg-gradient-to-r from-red-950 via-rose-950 to-amber-950 border-b-2 border-rose-500 px-4 py-3.5 text-white shadow-2xl relative z-30 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0">
+                <AlertTriangle className="h-5 w-5 text-rose-400 animate-pulse" />
+              </span>
+              <div className="text-xs leading-relaxed">
+                <div className="font-bold text-rose-200 text-sm flex items-center gap-2">
+                  Incompatible Network Detected in MetaMask (Showing ETH)!
+                </div>
+                <p className="text-slate-300 mt-0.5">
+                  Your MetaMask is currently set to{' '}
+                  <span className="font-mono bg-rose-950 px-1.5 py-0.5 rounded border border-rose-500/30 text-rose-300 font-bold">
+                    {currentChainId === '0x2105' ? 'Base (8453)' : currentChainId}
+                  </span>
+                  , which calculates gas in <strong className="text-rose-400">ETH</strong> and flags contract addresses as untrusted. AegisGov runs strictly on{' '}
+                  <strong className="text-amber-400">GenLayer Studionet (Chain 61999)</strong> using native{' '}
+                  <strong className="text-amber-400">GEN tokens</strong>.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleSwitchNetwork}
+              className="shrink-0 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs shadow-xl shadow-amber-500/30 transition cursor-pointer flex items-center gap-2"
+            >
+              <Zap className="h-4 w-4 fill-current" />
+              Switch MetaMask to GenLayer Studionet (GEN)
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Judicial Chamber */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 w-full">
