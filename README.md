@@ -2,6 +2,9 @@
 
 > **Real-Time Autonomous AI Compliance Court & Smart Grant Escrow on GenLayer Studionet**  
 > *Track: AI Governance / Autonomous Safe-Harbor | Builder Program Submission*
+> 
+> 🌐 **Live Web3 DApp**: [https://aegisgov.vercel.app](https://aegisgov.vercel.app)  
+> 📦 **GitHub Repository**: [https://github.com/luongnhan9999/AegisGov](https://github.com/luongnhan9999/AegisGov)
 
 ---
 
@@ -194,7 +197,8 @@ npm run dev
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### Key Frontend Features:
-- **MetaMask Web3 Connect**: Automatically switches your wallet to GenLayer Studionet (Chain ID `0x1048b`).
+- **MetaMask Web3 Connect**: Automatically switches your wallet to GenLayer Studionet (Chain ID `61999` / `0xF1EF`).
+- **Real-Time Zero-Mock Blockchain Sync**: All state is fetched live from the deployed Intelligent Contract via `genlayer-js`.
 - **Interactive Judge Test Bench**: 1-click loading of 3 realistic benchmark scenarios:
   1. *Scenario 1*: Compliant Autonomous Yield Rebalancer (Passed audit, 24h cooling-off window).
   2. *Scenario 2*: Malicious Extraction Attack (Blacklist trigger, instant slashing & sponsor refund).
@@ -202,12 +206,15 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 - **Live AI Reason Display**: Visualizes the un-truncated consensus justification on-chain.
 - **Cooling-Off Live Countdown**: Displays real-time dispute countdown timers.
 - **Pull-over-Push Vault Panel**: Inspect and withdraw available GEN credits in 1 click.
+- **Web3 Diagnostic Console**: Displays live RPC calls and consensus status transitions.
 
 ---
 
 ## 📝 Submission Registration Information
 
 - **Project Name**: `AegisGov`
+- **Live Web3 DApp URL**: [https://aegisgov.vercel.app](https://aegisgov.vercel.app)
+- **GitHub Repository**: [https://github.com/luongnhan9999/AegisGov](https://github.com/luongnhan9999/AegisGov)
 - **Primary Tag**: `AI Governance / Autonomous Safe-Harbor`
 - **Tag 1**: `Constitutional-AI`
 - **Tag 2**: `Smart-Escrow`
