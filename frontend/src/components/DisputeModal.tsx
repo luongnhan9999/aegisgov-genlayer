@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
 import type { PolicyProposal } from '../types';
 
 interface DisputeModalProps {

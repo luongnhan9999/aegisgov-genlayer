@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Scale, ShieldCheck, Flame, ShieldAlert, ArrowRight, Gavel } from 'lucide-react';
+import { ArrowRight, Gavel } from 'lucide-react';
 import type { DemoScenario } from '../types';
 import { DEMO_SCENARIOS } from '../types';
 

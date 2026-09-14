@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, CheckCircle2, AlertCircle, ExternalLink, ShieldCheck, Cpu, X, Check } from 'lucide-react';
+import { RefreshCw, CheckCircle2, AlertCircle, ExternalLink, Cpu, X, Check } from 'lucide-react';
 
 interface ConsensusProgressModalProps {
   isOpen: boolean;

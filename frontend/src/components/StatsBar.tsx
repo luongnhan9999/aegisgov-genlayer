@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Lock, Scale, Coins, ArrowDownToLine, Landmark } from 'lucide-react';
+import { ShieldCheck, Lock, Scale, ArrowDownToLine, Landmark } from 'lucide-react';
 import { formatGen } from '../utils/format';
 import type { PolicyProposal } from '../types';
 

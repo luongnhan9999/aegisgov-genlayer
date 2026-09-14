@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Shield, Plus, RefreshCw, AlertCircle, CheckCircle2, 
-  ExternalLink, Layers, Search, Sparkles, Terminal, ChevronDown, ChevronUp,
-  Scale, Landmark, ShieldCheck, Lock, Gavel, AlertTriangle, Zap
+  Plus, RefreshCw, AlertCircle, 
+  Search, Terminal, ChevronDown, ChevronUp,
+  Scale, Gavel, AlertTriangle, Zap
 } from 'lucide-react';
 import { Header } from './components/Header';
 import { StatsBar } from './components/StatsBar';

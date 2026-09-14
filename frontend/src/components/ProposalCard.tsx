@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   ShieldCheck, AlertTriangle, Clock, ExternalLink, Hash, User, 
-  Bot, ArrowUpRight, Flame, CheckCircle, ChevronDown, ChevronUp, Copy, Check, Scale, Gavel, Crown
+  Bot, Flame, CheckCircle, ChevronDown, ChevronUp, Copy, Check, Scale, Crown
 } from 'lucide-react';
 import type { PolicyProposal } from '../types';
 import { formatGen, shortenAddress, formatRemainingTime, formatTimeAgo } from '../utils/format';

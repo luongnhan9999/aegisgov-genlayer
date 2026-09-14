@@ -1,5 +1,5 @@
 import React from 'react';
-import { Landmark, ArrowDownToLine, ShieldCheck, ShieldAlert, Sparkles } from 'lucide-react';
+import { Landmark, ArrowDownToLine } from 'lucide-react';
 import { formatGen } from '../utils/format';
 
 interface VaultCardProps {
