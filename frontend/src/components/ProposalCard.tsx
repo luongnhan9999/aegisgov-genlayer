@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   ShieldCheck, AlertTriangle, Clock, ExternalLink, Hash, User, 
-  Bot, ArrowUpRight, Flame, CheckCircle, ChevronDown, ChevronUp, Copy, Check, Scale, Gavel
+  Bot, ArrowUpRight, Flame, CheckCircle, ChevronDown, ChevronUp, Copy, Check, Scale, Gavel, Crown
 } from 'lucide-react';
 import type { PolicyProposal } from '../types';
 import { formatGen, shortenAddress, formatRemainingTime, formatTimeAgo } from '../utils/format';
@@ -127,6 +127,30 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
             <span className="text-xs font-bold text-amber-400 font-cinzel ml-1.5">GEN</span>
           </div>
         </div>
+      </div>
+
+      {/* User Standing & Judicial Role Bar */}
+      <div className="px-5 sm:px-6 py-2.5 bg-slate-950/70 border-b border-amber-500/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span className="text-slate-400 text-[11px] font-mono flex items-center gap-1.5">
+          <Scale className="h-3 w-3 text-amber-400" />
+          Docket Standing:
+        </span>
+        {isSponsor ? (
+          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/40 text-[11px] font-bold font-mono shadow-sm">
+            <Crown className="h-3 w-3 text-amber-400" />
+            Connected as DAO Court Sponsor (Grantor)
+          </span>
+        ) : isOperator ? (
+          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/40 text-[11px] font-bold font-mono shadow-sm">
+            <Bot className="h-3 w-3 text-indigo-400" />
+            Connected as Agent Custodian (Operator)
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-800 text-[11px] font-medium font-mono">
+            <User className="h-3 w-3 text-slate-500" />
+            Public Observer / Third-Party Auditor
+          </span>
+        )}
       </div>
 
       {/* Consensus Verdict Decree (Rendered when evaluated) */}
@@ -306,16 +330,21 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
           )}
         </button>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Action 1: Submit Telemetry */}
           {proposal.status === 'ACTIVE' && (
             <button
               onClick={() => onSubmitTelemetry(proposal)}
               disabled={isActionLoading}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition flex items-center gap-1.5 disabled:opacity-50"
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-lg ${
+                isOperator
+                  ? 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-amber-500/20'
+                  : 'bg-slate-900 hover:bg-slate-800 border border-indigo-500/30 text-indigo-300'
+              }`}
+              title={isOperator ? 'Submit telemetry milestone proof' : `Requires Operator (${shortenAddress(proposal.agent_operator)}) signature`}
             >
               <Bot className="h-3.5 w-3.5" />
-              Submit Telemetry Audit
+              {isOperator ? 'Submit Telemetry (Operator Action)' : 'Submit Telemetry (Operator Key Required)'}
             </button>
           )}
 
@@ -324,10 +353,15 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
             <button
               onClick={() => onRaiseDispute(proposal)}
               disabled={isActionLoading}
-              className="px-4 py-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-200 font-bold text-xs transition flex items-center gap-1.5 disabled:opacity-50"
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer ${
+                isSponsor
+                  ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/30'
+                  : 'bg-rose-950/50 hover:bg-rose-900 border border-rose-500/40 text-rose-300'
+              }`}
+              title={isSponsor ? 'Challenge this evaluation during 24h cooling-off' : `Requires Sponsor (${shortenAddress(proposal.sponsor)}) signature`}
             >
               <AlertTriangle className="h-3.5 w-3.5" />
-              Challenge Evaluation (Sponsor)
+              {isSponsor ? 'Challenge Evaluation (Sponsor Action)' : 'Challenge (Sponsor Key Required)'}
             </button>
           )}
 
@@ -337,9 +371,10 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
               onClick={() => onFinalizeDisbursement(proposal.id)}
               disabled={isActionLoading}
               className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              title="Cooling-off completed. Disburse escrow to Operator's withdrawable vault."
             >
               <CheckCircle className="h-3.5 w-3.5" />
-              Disburse Milestone Escrow
+              Disburse Milestone Escrow (Operator/Sponsor)
             </button>
           )}
 
@@ -349,9 +384,10 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
               onClick={() => onAppealDispute(proposal)}
               disabled={isActionLoading}
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20 transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              title="Submit counter-evidence for Supreme Judicial Re-Audit on GenLayer"
             >
               <Scale className="h-3.5 w-3.5" />
-              Judicial Appeal &amp; Re-Audit
+              Judicial Appeal &amp; Re-Audit (Operator/Sponsor Action)
             </button>
           )}
 
@@ -360,10 +396,11 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
             <button
               onClick={() => onDismissDispute(proposal.id)}
               disabled={isActionLoading}
-              className="px-3.5 py-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-bold text-xs transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-emerald-950/90 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 font-bold text-xs transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              title="Amicably dismiss dispute and release escrow to Operator"
             >
               <CheckCircle className="h-3.5 w-3.5" />
-              Dismiss Dispute &amp; Release
+              Dismiss Dispute &amp; Release (Sponsor Action)
             </button>
           )}
 
@@ -372,10 +409,14 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
             <button
               onClick={() => onRecoverExpired(proposal.id)}
               disabled={isActionLoading}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition cursor-pointer"
+              className={`px-3.5 py-2 rounded-xl text-xs font-medium transition cursor-pointer border ${
+                isSponsor 
+                  ? 'bg-amber-950/40 hover:bg-amber-900/60 border-amber-500/40 text-amber-300' 
+                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-300'
+              }`}
               title="Reclaim escrow if agent abandoned milestone without submitting telemetry"
             >
-              Reclaim Expired
+              {isSponsor ? 'Reclaim Expired (Sponsor)' : 'Reclaim Expired (Sponsor Key Required)'}
             </button>
           )}
         </div>

@@ -292,6 +292,13 @@ export const App: React.FC = () => {
     if (!account) throw new Error('Please connect your MetaMask wallet first.');
     if (!contractAddress) throw new Error('Contract address not configured.');
 
+    const targetProp = proposals.find((p) => p.id === proposalId);
+    if (targetProp && account.toLowerCase() !== targetProp.agent_operator.toLowerCase()) {
+      const msg = `Permission Denied: Only the designated Agent Operator (${targetProp.agent_operator}) can submit telemetry for this docket.\n\nYour connected account is: ${account}.\n\nPlease switch to the Operator account in MetaMask.`;
+      alert(msg);
+      throw new Error(msg);
+    }
+
     setIsActionLoading(true);
     setConsensusState({
       isOpen: true,
@@ -336,6 +343,13 @@ export const App: React.FC = () => {
   // 3. Raise Dispute
   const handleRaiseDispute = async (proposalId: string, reason: string) => {
     if (!account) throw new Error('Please connect your MetaMask wallet first.');
+
+    const targetProp = proposals.find((p) => p.id === proposalId);
+    if (targetProp && account.toLowerCase() !== targetProp.sponsor.toLowerCase()) {
+      const msg = `Permission Denied: Only the DAO Court Sponsor (${targetProp.sponsor}) who funded this escrow can challenge an evaluation decree.\n\nYour connected account is: ${account}.\n\nPlease switch to the Sponsor account in MetaMask.`;
+      alert(msg);
+      throw new Error(msg);
+    }
 
     setIsActionLoading(true);
     setConsensusState({
@@ -428,6 +442,11 @@ export const App: React.FC = () => {
   const handleDismissDispute = async (proposalId: string) => {
     if (!account) return alert('Please connect MetaMask first.');
 
+    const targetProp = proposals.find((p) => p.id === proposalId);
+    if (targetProp && account.toLowerCase() !== targetProp.sponsor.toLowerCase()) {
+      return alert(`Permission Denied: Only the DAO Court Sponsor (${targetProp.sponsor}) can dismiss a dispute challenge.\n\nYour current account is: ${account}.`);
+    }
+
     setIsActionLoading(true);
     setConsensusState({
       isOpen: true,
@@ -515,6 +534,11 @@ export const App: React.FC = () => {
   // 5. Recover Expired Grant
   const handleRecoverExpired = async (proposalId: string) => {
     if (!account) return alert('Please connect MetaMask first.');
+
+    const targetProp = proposals.find((p) => p.id === proposalId);
+    if (targetProp && account.toLowerCase() !== targetProp.sponsor.toLowerCase()) {
+      return alert(`Permission Denied: Only the DAO Court Sponsor (${targetProp.sponsor}) can recover expired grant funds.\n\nYour current account is: ${account}.`);
+    }
 
     setIsActionLoading(true);
     setConsensusState({
@@ -949,6 +973,7 @@ export const App: React.FC = () => {
         onRegister={handleRegisterGrant}
         isLoading={isActionLoading}
         initialScenario={activeScenario}
+        currentUser={account}
       />
 
       <TelemetryModal

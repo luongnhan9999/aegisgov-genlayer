@@ -19,6 +19,7 @@ interface RegisterModalProps {
   }) => Promise<void>;
   isLoading: boolean;
   initialScenario?: DemoScenario | null;
+  currentUser?: string;
 }
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({
@@ -27,6 +28,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   onRegister,
   isLoading,
   initialScenario,
+  currentUser,
 }) => {
   const [proposalId, setProposalId] = useState(`PROP-${Math.floor(1000 + Math.random() * 9000)}`);
   const [targetAgentId, setTargetAgentId] = useState('AGENT-AUTONOMOUS-TRADER-01');
@@ -175,7 +177,18 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           {/* Row 2: Operator Address & Grant Amount */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Agent Operator Address</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-slate-300 font-semibold">Agent Operator Address</label>
+                {currentUser && (
+                  <button
+                    type="button"
+                    onClick={() => setAgentOperator(currentUser)}
+                    className="text-[10px] text-amber-400 hover:text-amber-300 hover:underline font-mono cursor-pointer"
+                  >
+                    Use My Address
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 value={agentOperator}
