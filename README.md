@@ -4,8 +4,8 @@
 > *Track: AI Governance / Autonomous Safe-Harbor | Builder Program Submission*
 > 
 > 🌐 **Live App**: [https://aegisgov-genlayer.vercel.app](https://aegisgov-genlayer.vercel.app)  
-> 📜 **Deployed Contract**: [`0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB`](https://genlayer-explorer.vercel.app/address/0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB)  
-> 🔍 **GenLayer Explorer**: [https://genlayer-explorer.vercel.app/address/0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB](https://genlayer-explorer.vercel.app/address/0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB)  
+> 📜 **Deployed Contract**: [`0xbfF6d305d2F806d4CD0208Cd6B5FaE5cFbDa4B35`](https://genlayer-explorer.vercel.app/address/0xbfF6d305d2F806d4CD0208Cd6B5FaE5cFbDa4B35)  
+> 🔍 **GenLayer Explorer**: [https://genlayer-explorer.vercel.app/address/0xbfF6d305d2F806d4CD0208Cd6B5FaE5cFbDa4B35](https://genlayer-explorer.vercel.app/address/0xbfF6d305d2F806d4CD0208Cd6B5FaE5cFbDa4B35)  
 > 📦 **GitHub Repository**: [https://github.com/luongnhan9999/aegisgov-genlayer](https://github.com/luongnhan9999/aegisgov-genlayer)
 
 ---
@@ -181,7 +181,7 @@ AegisGov/
 6. Sign the deployment transaction using MetaMask on **GenLayer Studionet** (Chain ID: `61999` / `0xF1EF`).
 7. Copy the deployed contract address and set it in `frontend/.env`:
    ```bash
-   VITE_CONTRACT_ADDRESS=0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB
+   VITE_CONTRACT_ADDRESS=0xbfF6d305d2F806d4CD0208Cd6B5FaE5cFbDa4B35
    ```
 
 ---
@@ -240,8 +240,8 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 - **Project Name**: `aegisgov-genlayer`
 - **Live App**: [https://aegisgov-genlayer.vercel.app](https://aegisgov-genlayer.vercel.app)
 - **GitHub Repository (Public)**: [https://github.com/luongnhan9999/aegisgov-genlayer](https://github.com/luongnhan9999/aegisgov-genlayer)
-- **Deployed Contract (Studionet)**: [`0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB`](https://genlayer-explorer.vercel.app/address/0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB)
-- **Explorer Link**: [https://genlayer-explorer.vercel.app/address/0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB](https://genlayer-explorer.vercel.app/address/0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB)
+- **Deployed Contract (Studionet)**: [`0xbfF6d305d2F806d4CD0208Cd6B5FaE5cFbDa4B35`](https://genlayer-explorer.vercel.app/address/0xbfF6d305d2F806d4CD0208Cd6B5FaE5cFbDa4B35)
+- **Explorer Link**: [https://genlayer-explorer.vercel.app/address/0xbfF6d305d2F806d4CD0208Cd6B5FaE5cFbDa4B35](https://genlayer-explorer.vercel.app/address/0xbfF6d305d2F806d4CD0208Cd6B5FaE5cFbDa4B35)
 - **Primary Tag**: `AI-Governance`
 - **Tag 1**: `Constitutional-AI`
 - **Tag 2**: `Decentralized-Justice`

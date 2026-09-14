@@ -98,4 +98,4 @@ export const INITIAL_PROPOSALS: PolicyProposal[] = [];
 export const DEFAULT_CONTRACT_ADDRESS =
   import.meta.env.VITE_CONTRACT_ADDRESS ||
   import.meta.env.VITE_AEGIS_CONTRACT_ADDRESS ||
-  '0x9ee2E068fAfe71461E6562F79Cc95cf6B0f4dDeB';
+  '0xbfF6d305d2F806d4CD0208Cd6B5FaE5cFbDa4B35';

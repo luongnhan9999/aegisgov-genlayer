@@ -41,8 +41,9 @@ export const App: React.FC = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [contractAddress, setContractAddress] = useState<string>(() => {
     const saved = localStorage.getItem('aegisgov_contract_address');
-    if (saved && (saved.toLowerCase() === '0x5b1162a178715bb6a11d0bccdf1cb75da8a7ec32' || saved.toLowerCase() === '0x0000000000000000000000000000000000000000')) {
+    if (saved && saved.toLowerCase() !== DEFAULT_CONTRACT_ADDRESS.toLowerCase()) {
       localStorage.setItem('aegisgov_contract_address', DEFAULT_CONTRACT_ADDRESS);
+      localStorage.removeItem('aegisgov_initial_grants');
       return DEFAULT_CONTRACT_ADDRESS;
     }
     return saved || DEFAULT_CONTRACT_ADDRESS;
