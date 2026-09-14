@@ -1,29 +1,50 @@
 @import "tailwindcss";
 
 :root {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   color-scheme: dark;
 }
 
-code, pre, .font-mono {
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-mono {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Custom scrollbar styling */
+/* Background Cybernetic Judicial Grid */
+.bg-judicial-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(245, 158, 11, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(245, 158, 11, 0.03) 1px, transparent 1px);
+}
+
+/* Luxury Aureate Glow */
+.gold-glow {
+  box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.15);
+}
+
+.indigo-glow {
+  box-shadow: 0 0 35px -5px rgba(99, 102, 241, 0.15);
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b0f19;
+  background: #05070c;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #1e293b;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #f59e0b;
 }

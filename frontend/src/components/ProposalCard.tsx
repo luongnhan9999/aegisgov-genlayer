@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   ShieldCheck, AlertTriangle, Clock, ExternalLink, Hash, User, 
-  Bot, ArrowUpRight, Flame, CheckCircle, ChevronDown, ChevronUp, Copy, Check
+  Bot, ArrowUpRight, Flame, CheckCircle, ChevronDown, ChevronUp, Copy, Check, Scale, Gavel
 } from 'lucide-react';
 import type { PolicyProposal } from '../types';
 import { formatGen, shortenAddress, formatRemainingTime, formatTimeAgo } from '../utils/format';
@@ -42,47 +42,47 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
     ? formatRemainingTime(proposal.payout_ready_at)
     : null;
 
-  // Status styling
+  // Status badge styling
   const getStatusBadge = () => {
     switch (proposal.status) {
       case 'ACTIVE':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse"></span>
-            ACTIVE ESCROW
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 font-mono tracking-wider">
+            <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse"></span>
+            ACTIVE DOCKET
           </span>
         );
       case 'EVALUATING':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-            <Clock className="h-3.5 w-3.5 animate-spin" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono tracking-wider">
+            <Clock className="h-3.5 w-3.5 animate-spin text-amber-400" />
             24H COOLING-OFF
           </span>
         );
       case 'RELEASED':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-            <CheckCircle className="h-3.5 w-3.5" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono tracking-wider">
+            <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />
             DISBURSED
           </span>
         );
       case 'SLASHED':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">
-            <Flame className="h-3.5 w-3.5" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 font-mono tracking-wider">
+            <Flame className="h-3.5 w-3.5 text-rose-400" />
             SLASHED & REFUNDED
           </span>
         );
       case 'DISPUTED':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-400 border border-purple-500/30">
-            <AlertTriangle className="h-3.5 w-3.5" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 font-mono tracking-wider">
+            <AlertTriangle className="h-3.5 w-3.5 text-purple-400" />
             FROZEN / DISPUTED
           </span>
         );
       case 'EXPIRED':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-700/50 text-slate-400 border border-slate-600">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-400 border border-slate-700 font-mono tracking-wider">
             EXPIRED
           </span>
         );
@@ -92,185 +92,187 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
   };
 
   return (
-    <div className="rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-slate-700/80 transition shadow-lg overflow-hidden backdrop-blur-sm">
-      {/* Top Header */}
-      <div className="p-5 border-b border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-slate-800 border border-slate-700/80 flex items-center justify-center text-cyan-400">
-            <Bot className="h-5 w-5" />
+    <div className="rounded-3xl bg-gradient-to-br from-[#0c0f17] via-[#080b12] to-[#05070c] border border-amber-500/20 hover:border-amber-500/40 transition-all duration-300 shadow-xl overflow-hidden backdrop-blur-md">
+      {/* Top Dossier Bar */}
+      <div className="p-5 sm:p-6 border-b border-amber-500/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 shrink-0 shadow-lg shadow-amber-500/5">
+            <Scale className="h-6 w-6" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-sm font-bold text-white tracking-wide">{proposal.id}</span>
-              <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-cyan-300 font-mono border border-slate-700">
+            <div className="flex items-center gap-2.5">
+              <span className="font-cinzel text-base font-bold text-white tracking-wider">
+                DOCKET #{proposal.id}
+              </span>
+              <span className="text-xs px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-700 text-amber-300 font-mono font-bold">
                 {proposal.target_agent_id}
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              Created {formatTimeAgo(proposal.created_at)}
+            <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
+              Registered {formatTimeAgo(proposal.created_at)}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4 self-end sm:self-center">
           {getStatusBadge()}
           <div className="text-right">
-            <span className="text-lg font-bold font-mono text-white tracking-tight">
+            <span className="text-2xl font-extrabold font-mono text-white tracking-tight">
               {formatGen(proposal.grant_amount)}
             </span>
-            <span className="text-xs font-bold text-cyan-400 ml-1">GEN</span>
+            <span className="text-xs font-bold text-amber-400 font-cinzel ml-1.5">GEN</span>
           </div>
         </div>
       </div>
 
-      {/* AI Consensus Audit Verdict (If evaluated) */}
+      {/* Consensus Verdict Decree (Rendered when evaluated) */}
       {proposal.verdict !== 'NONE' && (
-        <div className={`px-5 py-4 border-b ${
+        <div className={`p-5 border-b ${
           proposal.verdict === 'COMPLIANT'
-            ? 'bg-emerald-950/20 border-emerald-500/30'
-            : 'bg-rose-950/25 border-rose-500/30'
+            ? 'bg-gradient-to-r from-emerald-950/30 via-emerald-950/10 to-transparent border-emerald-500/30'
+            : 'bg-gradient-to-r from-rose-950/35 via-rose-950/15 to-transparent border-rose-500/30'
         }`}>
-          <div className="flex items-start gap-3">
-            <div className={`mt-0.5 p-1.5 rounded-lg shrink-0 ${
+          <div className="flex items-start gap-3.5">
+            <div className={`mt-0.5 p-2 rounded-xl shrink-0 ${
               proposal.verdict === 'COMPLIANT'
-                ? 'bg-emerald-500/20 text-emerald-400'
-                : 'bg-rose-500/20 text-rose-400'
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
             }`}>
               {proposal.verdict === 'COMPLIANT' ? (
-                <ShieldCheck className="h-5 w-5" />
+                <ShieldCheck className="h-6 w-6" />
               ) : (
-                <AlertTriangle className="h-5 w-5" />
+                <AlertTriangle className="h-6 w-6" />
               )}
             </div>
             <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <span className={`text-xs font-bold uppercase tracking-wider ${
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className={`text-xs font-bold uppercase tracking-widest font-cinzel ${
                   proposal.verdict === 'COMPLIANT' ? 'text-emerald-400' : 'text-rose-400'
                 }`}>
-                  GenLayer Validator Consensus Verdict: {proposal.verdict}
+                  GenLayer Supreme Consensus Decree: {proposal.verdict}
                 </span>
                 {coolingOff && (
-                  <span className={`text-[11px] font-mono font-medium px-2 py-0.5 rounded border ${
+                  <span className={`text-xs font-mono font-bold px-2.5 py-1 rounded-lg border ${
                     coolingOff.isElapsed 
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' 
-                      : 'bg-amber-500/20 text-amber-300 border-amber-500/30 animate-pulse'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+                      : 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
                   }`}>
                     {coolingOff.formatted}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-200 mt-1.5 leading-relaxed font-sans bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/80">
-                <span className="text-slate-400 font-semibold uppercase text-[10px] block mb-1">
-                  Autonomous Justification (Reason):
+              <div className="mt-2.5 p-3.5 rounded-2xl bg-black/50 border border-slate-800 text-xs text-slate-200 leading-relaxed font-sans">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1 font-mono">
+                  Autonomous Judicial Opinion:
                 </span>
-                {proposal.reason}
-              </p>
+                "{proposal.reason}"
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Main Details Grid */}
-      <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+      {/* Parties & Evidence Chamber */}
+      <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
         {/* Parties */}
         <div className="space-y-2.5">
-          <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
-            <span className="text-slate-400 flex items-center gap-1.5">
-              <User className="h-3.5 w-3.5 text-blue-400" />
-              DAO Sponsor:
+          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/80 border border-slate-800/90">
+            <span className="text-slate-400 flex items-center gap-2">
+              <User className="h-4 w-4 text-amber-400" />
+              DAO Court Sponsor:
             </span>
-            <span className="font-mono text-slate-200 font-medium">
+            <span className="font-mono text-slate-200 font-bold">
               {shortenAddress(proposal.sponsor)}
-              {isSponsor && <span className="ml-1.5 text-[10px] text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded">(You)</span>}
+              {isSponsor && <span className="ml-1.5 text-[10px] text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-500/30">(You)</span>}
             </span>
           </div>
 
-          <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
-            <span className="text-slate-400 flex items-center gap-1.5">
-              <Bot className="h-3.5 w-3.5 text-emerald-400" />
-              Agent Operator:
+          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/80 border border-slate-800/90">
+            <span className="text-slate-400 flex items-center gap-2">
+              <Bot className="h-4 w-4 text-indigo-400" />
+              Agent Custodian (Operator):
             </span>
-            <span className="font-mono text-slate-200 font-medium">
+            <span className="font-mono text-slate-200 font-bold">
               {shortenAddress(proposal.agent_operator)}
-              {isOperator && <span className="ml-1.5 text-[10px] text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded">(You)</span>}
+              {isOperator && <span className="ml-1.5 text-[10px] text-indigo-400 bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-500/30">(You)</span>}
             </span>
           </div>
         </div>
 
-        {/* Cryptographic Manifest Hashes */}
+        {/* Hashes Pinning */}
         <div className="space-y-2.5">
-          <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 flex items-center justify-between">
-            <div className="flex items-center gap-1.5 truncate">
-              <Hash className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+          <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800/90 flex items-center justify-between">
+            <div className="flex items-center gap-2 truncate">
+              <Hash className="h-4 w-4 text-amber-400 shrink-0" />
               <span className="text-slate-400">Spec SHA-256:</span>
-              <span className="font-mono text-[11px] text-cyan-300 truncate">
+              <span className="font-mono text-amber-300 font-bold truncate">
                 {proposal.constitutional_spec_hash ? shortenAddress(proposal.constitutional_spec_hash, 6) : 'N/A'}
               </span>
             </div>
             {proposal.constitutional_spec_hash && (
               <button
                 onClick={() => handleCopy(proposal.constitutional_spec_hash, 'spec')}
-                className="text-slate-400 hover:text-slate-200 p-1"
-                title="Copy SHA-256 Hash"
+                className="text-slate-400 hover:text-amber-400 p-1 transition"
+                title="Copy SHA-256 Digest"
               >
-                {copiedHash === 'spec' ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                {copiedHash === 'spec' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
               </button>
             )}
           </div>
 
-          <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 flex items-center justify-between">
-            <div className="flex items-center gap-1.5 truncate">
-              <Hash className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+          <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800/90 flex items-center justify-between">
+            <div className="flex items-center gap-2 truncate">
+              <Hash className="h-4 w-4 text-indigo-400 shrink-0" />
               <span className="text-slate-400">Log SHA-256:</span>
-              <span className="font-mono text-[11px] text-indigo-300 truncate">
+              <span className="font-mono text-indigo-300 font-bold truncate">
                 {proposal.telemetry_log_hash ? shortenAddress(proposal.telemetry_log_hash, 6) : 'Awaiting Proof'}
               </span>
             </div>
             {proposal.telemetry_log_hash && (
               <button
                 onClick={() => handleCopy(proposal.telemetry_log_hash, 'log')}
-                className="text-slate-400 hover:text-slate-200 p-1"
-                title="Copy SHA-256 Hash"
+                className="text-slate-400 hover:text-indigo-400 p-1 transition"
+                title="Copy SHA-256 Digest"
               >
-                {copiedHash === 'log' ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                {copiedHash === 'log' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Expandable Rules & Evidence Section */}
+      {/* Expandable Dossier Sections */}
       {isExpanded && (
-        <div className="px-5 pb-5 pt-1 space-y-3 border-t border-slate-800/60 text-xs animate-in fade-in duration-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-              <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider block mb-1">
-                Mandatory Safety Boundaries
+        <div className="px-5 sm:px-6 pb-6 pt-1 space-y-4 border-t border-slate-800 text-xs animate-in fade-in duration-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+            <div className="bg-black/60 p-4 rounded-2xl border border-slate-800/90">
+              <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest block mb-1.5 font-mono">
+                Mandatory Safe-Harbor Perimeter
               </span>
               <p className="text-slate-300 whitespace-pre-line font-mono text-[11px] leading-relaxed">
-                {proposal.safety_boundary_rules || 'None configured'}
+                {proposal.safety_boundary_rules || 'None specified'}
               </p>
             </div>
 
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-              <span className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider block mb-1">
-                Blacklisted / Prohibited Behaviors
+            <div className="bg-black/60 p-4 rounded-2xl border border-slate-800/90">
+              <span className="text-[11px] font-bold text-rose-400 uppercase tracking-widest block mb-1.5 font-mono">
+                Blacklisted Constitutional Violations
               </span>
               <p className="text-slate-300 whitespace-pre-line font-mono text-[11px] leading-relaxed">
-                {proposal.blacklisted_behaviors || 'None configured'}
+                {proposal.blacklisted_behaviors || 'None specified'}
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 pt-2 text-[11px]">
+          <div className="flex flex-wrap items-center gap-4 pt-2 text-xs">
             {proposal.constitutional_spec_url && (
               <a
                 href={proposal.constitutional_spec_url}
                 target="_blank"
                 rel="noreferrer"
-                className="text-cyan-400 hover:underline flex items-center gap-1"
+                className="text-amber-400 hover:underline flex items-center gap-1.5 font-medium"
               >
-                <ExternalLink className="h-3 w-3" /> View Constitutional Spec
+                <ExternalLink className="h-3.5 w-3.5" /> Inspect Constitutional Spec
               </a>
             )}
             {proposal.telemetry_log_url && (
@@ -278,35 +280,35 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
                 href={proposal.telemetry_log_url}
                 target="_blank"
                 rel="noreferrer"
-                className="text-indigo-400 hover:underline flex items-center gap-1"
+                className="text-indigo-400 hover:underline flex items-center gap-1.5 font-medium"
               >
-                <ExternalLink className="h-3 w-3" /> View Execution Telemetry
+                <ExternalLink className="h-3.5 w-3.5" /> Inspect Live Telemetry Feed
               </a>
             )}
           </div>
         </div>
       )}
 
-      {/* Actions Footer */}
-      <div className="px-5 py-3.5 bg-slate-950/80 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+      {/* Judicial Action Footer */}
+      <div className="px-5 sm:px-6 py-4 bg-slate-950/90 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1"
+          className="text-xs text-slate-400 hover:text-amber-300 flex items-center gap-1 transition font-medium"
         >
           {isExpanded ? (
-            <>Less Details <ChevronUp className="h-3.5 w-3.5" /></>
+            <>Collapse Dossier <ChevronUp className="h-4 w-4" /></>
           ) : (
-            <>View Policies & Hashes <ChevronDown className="h-3.5 w-3.5" /></>
+            <>Inspect Full Policy & Hashes <ChevronDown className="h-4 w-4" /></>
           )}
         </button>
 
-        <div className="flex items-center gap-2">
-          {/* Action 1: Submit Telemetry (When ACTIVE) */}
+        <div className="flex items-center gap-2.5">
+          {/* Action 1: Submit Telemetry */}
           {proposal.status === 'ACTIVE' && (
             <button
               onClick={() => onSubmitTelemetry(proposal)}
               disabled={isActionLoading}
-              className="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs shadow-sm transition flex items-center gap-1.5 disabled:opacity-50"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition flex items-center gap-1.5 disabled:opacity-50"
             >
               <Bot className="h-3.5 w-3.5" />
               Submit Telemetry Audit
@@ -318,34 +320,34 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({
             <button
               onClick={() => onRaiseDispute(proposal)}
               disabled={isActionLoading}
-              className="px-3.5 py-1.5 rounded-lg bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-300 font-medium text-xs transition flex items-center gap-1.5 disabled:opacity-50"
+              className="px-4 py-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-200 font-bold text-xs transition flex items-center gap-1.5 disabled:opacity-50"
             >
               <AlertTriangle className="h-3.5 w-3.5" />
-              Raise Dispute (Sponsor)
+              Challenge Evaluation (Sponsor)
             </button>
           )}
 
-          {/* Action 3: Finalize Disbursement (When EVALUATING and cooling-off elapsed) */}
+          {/* Action 3: Finalize Disbursement (When cooling-off elapsed) */}
           {proposal.status === 'EVALUATING' && coolingOff && coolingOff.isElapsed && (
             <button
               onClick={() => onFinalizeDisbursement(proposal.id)}
               disabled={isActionLoading}
-              className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md shadow-emerald-600/20 transition flex items-center gap-1.5 disabled:opacity-50"
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 transition flex items-center gap-1.5 disabled:opacity-50"
             >
               <CheckCircle className="h-3.5 w-3.5" />
-              Finalize Disbursement
+              Disburse Milestone Escrow
             </button>
           )}
 
-          {/* Action 4: Recover Expired Grant (When ACTIVE/DISPUTED past duration) */}
+          {/* Action 4: Recover Expired */}
           {(proposal.status === 'ACTIVE' || proposal.status === 'DISPUTED') && (
             <button
               onClick={() => onRecoverExpired(proposal.id)}
               disabled={isActionLoading}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition"
-              title="Recover abandoned escrow after expiration period"
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition"
+              title="Reclaim escrow after expiration window has elapsed"
             >
-              Recover Expired
+              Reclaim Expired
             </button>
           )}
         </div>

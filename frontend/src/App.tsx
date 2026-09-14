@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Shield, Plus, RefreshCw, AlertCircle, CheckCircle2, 
-  ExternalLink, Layers, Search, Sparkles, Terminal, ChevronDown, ChevronUp
+  ExternalLink, Layers, Search, Sparkles, Terminal, ChevronDown, ChevronUp,
+  Scale, Landmark, ShieldCheck, Lock, Gavel
 } from 'lucide-react';
 import { Header } from './components/Header';
 import { StatsBar } from './components/StatsBar';
@@ -71,14 +72,14 @@ export const App: React.FC = () => {
 
   // Auto-connect wallet on load
   useEffect(() => {
-    addLog('Checking MetaMask wallet session on GenLayer Studionet (Chain ID 61999)...');
+    addLog('AegisGov Court session initialized. Querying GenLayer Studionet (Chain 61999)...');
     autoCheckWalletConnection().then(({ address, balance }) => {
       if (address) {
         setAccount(address);
         setWalletBalance(balance);
-        addLog(`MetaMask session restored: ${address} | Balance: ${balance}`);
+        addLog(`Signer verified: ${address} | Balance: ${balance}`);
       } else {
-        addLog('No active wallet session. Ready for connection.');
+        addLog('Signer unattached. Ready for MetaMask authorization.');
       }
     });
 
@@ -87,14 +88,14 @@ export const App: React.FC = () => {
         setAccount(newAccount);
         if (newAccount) {
           fetchWalletBalance(newAccount).then(setWalletBalance);
-          addLog(`Active account changed: ${newAccount}`);
+          addLog(`Signer updated: ${newAccount}`);
         } else {
           setWalletBalance('0 GEN');
-          addLog('Wallet disconnected');
+          addLog('Signer detached.');
         }
       },
       (chainId) => {
-        addLog(`MetaMask chain changed: ${chainId}`);
+        addLog(`MetaMask active chain changed: ${chainId}`);
       }
     );
     return cleanup;
@@ -104,22 +105,22 @@ export const App: React.FC = () => {
   const handleUpdateContract = (addr: string) => {
     setContractAddress(addr);
     localStorage.setItem('aegisgov_contract_address', addr);
-    addLog(`Target contract address updated: ${addr}`);
+    addLog(`Target court docket address updated: ${addr}`);
   };
 
   // Fetch contract state strictly from blockchain
   const refreshState = useCallback(async () => {
     if (!contractAddress || contractAddress === '0x0000000000000000000000000000000000000000') {
-      addLog('Contract address not set. Paste your deployed contract address above.');
+      addLog('Docket contract address not set. Paste deployed contract address in the header.');
       return;
     }
 
     setIsLoadingProposals(true);
-    addLog(`Reading on-chain state from Intelligent Contract ${contractAddress}...`);
+    addLog(`Polling court state from Intelligent Contract ${contractAddress}...`);
     try {
       const liveProposals = await readProposalsFromChain(contractAddress);
       setProposals(liveProposals);
-      addLog(`Query completed: Loaded ${liveProposals.length} proposals directly from Studionet.`);
+      addLog(`Query synchronized: ${liveProposals.length} active court cases loaded from Studionet.`);
 
       if (account) {
         const credits = await readWithdrawableCredits(contractAddress, account);
@@ -128,7 +129,7 @@ export const App: React.FC = () => {
         setWalletBalance(bal);
       }
     } catch (err: any) {
-      addLog(`[Error] Failed to read contract state: ${err.message}`);
+      addLog(`[Error] Failed to read on-chain state: ${err.message}`);
     } finally {
       setIsLoadingProposals(false);
     }
@@ -141,14 +142,14 @@ export const App: React.FC = () => {
   // Connect Wallet
   const handleConnectWallet = async () => {
     setIsConnecting(true);
-    addLog('Requesting MetaMask connection on GenLayer Studionet...');
+    addLog('Requesting MetaMask authorization on Studionet...');
     try {
       const { address, balance } = await connectMetaMaskWallet();
       setAccount(address);
       setWalletBalance(balance);
-      addLog(`Wallet connected successfully: ${address} | Balance: ${balance}`);
+      addLog(`Wallet attached: ${address} | Balance: ${balance}`);
     } catch (err: any) {
-      addLog(`[Wallet Error] ${err.message}`);
+      addLog(`[Auth Error] ${err.message}`);
       alert(err.message || 'Failed to connect MetaMask');
     } finally {
       setIsConnecting(false);
@@ -176,9 +177,9 @@ export const App: React.FC = () => {
     setIsActionLoading(true);
     setConsensusState({
       isOpen: true,
-      stage: 'Requesting MetaMask signature for register_governance_grant()...',
+      stage: 'Awaiting signature to register court grant escrow...',
     });
-    addLog(`Initiating register_governance_grant (${params.proposalId}, Escrow: ${params.grantAmountGen} GEN)...`);
+    addLog(`Signing register_governance_grant (${params.proposalId}, Escrow: ${params.grantAmountGen} GEN)...`);
 
     try {
       const result = await writeContractOnChain(
@@ -205,10 +206,10 @@ export const App: React.FC = () => {
 
       setConsensusState({
         isOpen: true,
-        stage: `Proposal ${params.proposalId} registered on-chain with ${params.grantAmountGen} GEN escrow!`,
+        stage: `Case #${params.proposalId} successfully docketed on-chain with ${params.grantAmountGen} GEN escrow!`,
         txHash: result.txHash,
       });
-      addLog(`[Finality] Transaction accepted! Hash: ${result.txHash}`);
+      addLog(`[Finality] Escrow confirmed on Studionet! Hash: ${result.txHash}`);
       await refreshState();
     } catch (err: any) {
       setConsensusState({
@@ -233,7 +234,7 @@ export const App: React.FC = () => {
       isOpen: true,
       stage: 'Submitting telemetry audit to GenLayer Studionet...',
     });
-    addLog(`Operator submitting telemetry audit for ${proposalId} (Hash: ${logHash.slice(0, 10)}...)...`);
+    addLog(`Submitting execution telemetry for Case #${proposalId} (SHA-256: ${logHash.slice(0, 10)}...)...`);
 
     try {
       const result = await writeContractOnChain(
@@ -251,10 +252,10 @@ export const App: React.FC = () => {
 
       setConsensusState({
         isOpen: true,
-        stage: `Consensus audit completed for ${proposalId}! Verdict recorded on-chain.`,
+        stage: `Supreme Validator Consensus completed for #${proposalId}! Decree recorded on-chain.`,
         txHash: result.txHash,
       });
-      addLog(`[Audit Finalized] Hash: ${result.txHash}`);
+      addLog(`[Decree Finalized] Hash: ${result.txHash}`);
       await refreshState();
     } catch (err: any) {
       setConsensusState({
@@ -278,7 +279,7 @@ export const App: React.FC = () => {
       isOpen: true,
       stage: 'Submitting dispute challenge to freeze grant disbursement...',
     });
-    addLog(`Sponsor raising dispute challenge for ${proposalId}...`);
+    addLog(`Sponsor challenging evaluation decree for #${proposalId}...`);
 
     try {
       const result = await writeContractOnChain(
@@ -296,15 +297,15 @@ export const App: React.FC = () => {
 
       setConsensusState({
         isOpen: true,
-        stage: `Dispute accepted on-chain. Proposal ${proposalId} payout frozen.`,
+        stage: `Challenge recorded on-chain. Case #${proposalId} escrow frozen.`,
         txHash: result.txHash,
       });
-      addLog(`[Dispute Finalized] Hash: ${result.txHash}`);
+      addLog(`[Dispute Frozen] Hash: ${result.txHash}`);
       await refreshState();
     } catch (err: any) {
       setConsensusState({
         isOpen: true,
-        stage: 'Dispute failed',
+        stage: 'Dispute submission failed',
         error: err.message || 'Transaction rejected',
       });
       addLog(`[Dispute Error] ${err.message}`);
@@ -323,7 +324,7 @@ export const App: React.FC = () => {
       isOpen: true,
       stage: 'Settling milestone disbursement into Operator credit vault...',
     });
-    addLog(`Calling finalize_grant_disbursement for ${proposalId}...`);
+    addLog(`Disbursing milestone grant for Case #${proposalId}...`);
 
     try {
       const result = await writeContractOnChain(
@@ -335,22 +336,22 @@ export const App: React.FC = () => {
         account,
         (stage) => {
           setConsensusState((prev) => ({ ...prev, stage }));
-          addLog(`[Finalize] ${stage}`);
+          addLog(`[Disburse] ${stage}`);
         }
       );
 
       setConsensusState({
         isOpen: true,
-        stage: `Grant settled into Operator withdrawable balance!`,
+        stage: `Capital settled into Operator withdrawable credit balance!`,
         txHash: result.txHash,
       });
-      addLog(`[Settled] Hash: ${result.txHash}`);
+      addLog(`[Disbursed] Hash: ${result.txHash}`);
       await refreshState();
     } catch (err: any) {
       setConsensusState({
         isOpen: true,
         stage: 'Finalization failed',
-        error: err.message || 'Cooling-off duration has not elapsed or unauthorized caller',
+        error: err.message || '24-hour cooling-off window has not elapsed yet',
       });
       addLog(`[Finalize Error] ${err.message}`);
     } finally {
@@ -367,7 +368,7 @@ export const App: React.FC = () => {
       isOpen: true,
       stage: 'Reclaiming abandoned grant escrow back to Sponsor vault...',
     });
-    addLog(`Calling recover_expired_grant for ${proposalId}...`);
+    addLog(`Calling recover_expired_grant for #${proposalId}...`);
 
     try {
       const result = await writeContractOnChain(
@@ -385,7 +386,7 @@ export const App: React.FC = () => {
 
       setConsensusState({
         isOpen: true,
-        stage: `Expired grant recovered into Sponsor withdrawable vault!`,
+        stage: `Expired grant recovered into Sponsor vault!`,
         txHash: result.txHash,
       });
       addLog(`[Recovered] Hash: ${result.txHash}`);
@@ -402,16 +403,16 @@ export const App: React.FC = () => {
     }
   };
 
-  // 6. Withdraw Credits (Pull settlement)
+  // 6. Withdraw Credits
   const handleWithdrawCredits = async () => {
     if (!account) return alert('Please connect MetaMask first.');
 
     setIsActionLoading(true);
     setConsensusState({
       isOpen: true,
-      stage: 'Pulling native GEN from credit vault directly to your wallet...',
+      stage: 'Pulling native GEN from credit vault to your MetaMask wallet...',
     });
-    addLog('Executing withdraw_credits() pull transfer...');
+    addLog('Executing withdraw_credits() pull settlement...');
 
     try {
       const result = await writeContractOnChain(
@@ -429,7 +430,7 @@ export const App: React.FC = () => {
 
       setConsensusState({
         isOpen: true,
-        stage: 'Native GEN credits withdrawn successfully to MetaMask!',
+        stage: 'Native GEN credits withdrawn directly to MetaMask!',
         txHash: result.txHash,
       });
       addLog(`[Withdrawal Complete] Hash: ${result.txHash}`);
@@ -450,7 +451,7 @@ export const App: React.FC = () => {
   const handleSelectScenario = (scenario: DemoScenario) => {
     setActiveScenario(scenario);
     setIsRegisterOpen(true);
-    addLog(`Loaded preset '${scenario.title}' into registration modal.`);
+    addLog(`Precedent loaded: '${scenario.title}'. Ready for on-chain docketing.`);
   };
 
   // Filter proposals
@@ -465,8 +466,8 @@ export const App: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
-      {/* Top Header with Real Balance & Contract Selector */}
+    <div className="min-h-screen bg-[#05070c] bg-judicial-grid text-slate-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200">
+      {/* Top Header */}
       <Header
         account={account}
         walletBalance={walletBalance}
@@ -477,69 +478,108 @@ export const App: React.FC = () => {
         network="studionet"
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        {/* Real Network Status Notice */}
-        {!contractAddress || contractAddress === '0x0000000000000000000000000000000000000000' ? (
-          <div className="mb-6 p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
-            <div className="flex items-center gap-2.5">
-              <AlertCircle className="h-5 w-5 text-amber-400 shrink-0" />
-              <span>
-                <strong>Contract Address Not Configured</strong>: Deploy <code>contracts/AegisGov.py</code> via GenLayer Studio, then click <strong>Edit</strong> in the header to paste your contract address.
-              </span>
+      {/* Main Judicial Chamber */}
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 w-full">
+        {/* Unconfigured Alert */}
+        {(!contractAddress || contractAddress === '0x0000000000000000000000000000000000000000') && (
+          <div className="mb-8 p-5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-transparent border border-amber-500/40 text-amber-200 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <strong className="block font-cinzel text-sm text-white">Court Docket Contract Unspecified</strong>
+                <span className="text-slate-300">
+                  Deploy <code>contracts/AegisGov.py</code> on GenLayer Studio, then click <strong>Edit</strong> in the navbar to connect your live court contract.
+                </span>
+              </div>
             </div>
             <a
               href="https://studio.genlayer.com"
               target="_blank"
               rel="noreferrer"
-              className="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition text-[11px] shrink-0"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold hover:from-amber-400 hover:to-amber-500 transition text-xs shrink-0 shadow-lg shadow-amber-500/10"
             >
-              Open GenLayer Studio &rarr;
+              Open Studio &rarr;
             </a>
           </div>
-        ) : null}
+        )}
 
-        {/* Hero Section */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="h-2 w-2 rounded-full bg-cyan-400"></span>
-              <span className="text-xs font-semibold uppercase tracking-wider text-cyan-400">
-                Live On-Chain Protocol (Studionet)
-              </span>
+        {/* Supreme Judicial Hero Masthead */}
+        <div className="mb-10 rounded-3xl bg-gradient-to-br from-[#0c0f1a] via-[#080b12] to-[#05070c] border border-amber-500/30 p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+          {/* Background Atmospheric Glows */}
+          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-amber-500/10 blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
+
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-bold uppercase tracking-widest font-mono mb-4">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping"></span>
+                Supreme AI Governance Safe-Harbor Court
+              </div>
+
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-cinzel text-white tracking-wide leading-tight">
+                Autonomous AI Governance &amp; <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 bg-clip-text text-transparent">Safe-Harbor</span> Protocol
+              </h2>
+
+              <p className="text-xs sm:text-sm text-slate-300/90 mt-3 leading-relaxed max-w-2xl font-sans">
+                A real-time on-chain judicial court protecting capital allocators and autonomous agents. Capital grants are secured in non-custodial escrow and unlocked only when GenLayer validator consensus audits off-chain telemetry against immutable constitutional specifications.
+              </p>
+
+              {/* Constitutional Perimeter Badges */}
+              <div className="mt-6 flex flex-wrap items-center gap-2.5 text-[11px] font-mono">
+                <span className="px-3 py-1 rounded-lg bg-slate-950/90 border border-slate-800 text-slate-300 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
+                  Zero-Normalization Fail-Closed Parsing
+                </span>
+                <span className="px-3 py-1 rounded-lg bg-slate-950/90 border border-slate-800 text-slate-300 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
+                  Authoritative SHA-256 Pinning
+                </span>
+                <span className="px-3 py-1 rounded-lg bg-slate-950/90 border border-slate-800 text-slate-300 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                  24H Cooling-Off Dispute Safe-Harbor
+                </span>
+              </div>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Real-Time AI Governance & Safe-Harbor Protocol
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
-              Eliminating counterparty trust risk for AI agent grants. All milestone releases are authenticated on-chain by GenLayer validator consensus auditing live execution telemetry against immutable constitutional specifications.
-            </p>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={refreshState}
-              disabled={isLoadingProposals}
-              className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition disabled:opacity-50 flex items-center gap-1.5 text-xs font-medium"
-              title="Query latest block state from Studionet"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoadingProposals ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Refresh State</span>
-            </button>
-            <button
-              onClick={() => {
-                setActiveScenario(null);
-                setIsRegisterOpen(true);
-              }}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold text-xs shadow-lg shadow-cyan-500/20 transition"
-            >
-              <Plus className="h-4 w-4" />
-              Create Governance Grant
-            </button>
+            {/* Emblem Hologram Visual */}
+            <div className="flex flex-col sm:flex-row lg:flex-col items-center gap-4 shrink-0">
+              <div className="relative group">
+                <div className="h-40 w-40 sm:h-44 sm:w-44 rounded-3xl overflow-hidden border-2 border-amber-500/40 shadow-2xl shadow-amber-500/20 group-hover:border-amber-400 transition-all duration-300">
+                  <img
+                    src="/aegisgov_emblem.jpg"
+                    alt="AegisGov Holographic Seal"
+                    className="h-full w-full object-cover object-center group-hover:scale-105 transition-all duration-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={refreshState}
+                  disabled={isLoadingProposals}
+                  className="p-2.5 rounded-2xl bg-slate-900/90 border border-amber-500/20 hover:border-amber-500/40 text-slate-300 hover:text-white transition disabled:opacity-50"
+                  title="Refresh state from Studionet block"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isLoadingProposals ? 'animate-spin text-amber-400' : ''}`} />
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveScenario(null);
+                    setIsRegisterOpen(true);
+                  }}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs shadow-xl shadow-amber-500/25 transition cursor-pointer"
+                >
+                  <Plus className="h-4 w-4" />
+                  Docket New Case
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Global Statistics Bar (Computed strictly from live on-chain proposals) */}
+        {/* Global Statistics Bar */}
         <StatsBar
           proposals={proposals}
           withdrawableCredits={withdrawableCredits}
@@ -549,7 +589,7 @@ export const App: React.FC = () => {
           }}
         />
 
-        {/* Withdrawable Vault Panel */}
+        {/* Withdrawable Sovereign Vault */}
         <div id="vault-section">
           <VaultCard
             withdrawableCredits={withdrawableCredits}
@@ -559,16 +599,18 @@ export const App: React.FC = () => {
           />
         </div>
 
-        {/* Judge Interactive Test Bench (Loads pre-configured valid data directly into forms) */}
+        {/* Judicial Precedents Test Bench for Judges */}
         <DemoScenarioCard onSelectScenario={handleSelectScenario} />
 
         {/* Proposals Explorer Header & Filters */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-2">
-            <Layers className="h-5 w-5 text-cyan-400" />
-            <h3 className="text-base font-bold text-white tracking-tight">On-Chain Policy Grants</h3>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-cyan-300 font-mono">
-              {filteredProposals.length} live
+          <div className="flex items-center gap-2.5">
+            <Scale className="h-5 w-5 text-amber-400" />
+            <h3 className="text-base font-bold font-cinzel text-white tracking-wider uppercase">
+              On-Chain Judicial Dockets
+            </h3>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-900 border border-amber-500/30 text-amber-300 font-mono">
+              {filteredProposals.length} active
             </span>
           </div>
 
@@ -580,20 +622,20 @@ export const App: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by Proposal ID or Agent..."
-                className="pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-48 sm:w-56"
+                placeholder="Search Docket ID or Agent..."
+                className="pl-8 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/60 w-52 sm:w-60 font-mono"
               />
             </div>
 
             {/* Status Tabs */}
-            <div className="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+            <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-mono">
               {['ALL', 'ACTIVE', 'EVALUATING', 'RELEASED', 'SLASHED'].map((st) => (
                 <button
                   key={st}
                   onClick={() => setFilterStatus(st)}
-                  className={`px-2.5 py-1 rounded-lg font-medium transition ${
+                  className={`px-3 py-1 rounded-lg font-bold transition ${
                     filterStatus === st
-                      ? 'bg-cyan-600 text-white shadow-sm'
+                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -604,30 +646,34 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Proposals Cards List (100% Real on-chain data) */}
-        <div className="space-y-4">
+        {/* Case Dockets Cards List (100% Real On-Chain) */}
+        <div className="space-y-5">
           {filteredProposals.length === 0 ? (
-            <div className="text-center py-16 rounded-2xl bg-slate-900/40 border border-slate-800/80 p-6">
-              <Shield className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-              <h4 className="text-base font-bold text-white">No On-Chain Grants Recorded Yet</h4>
-              <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto leading-relaxed">
-                The smart contract currently has 0 proposals registered on GenLayer Studionet. Connect your MetaMask wallet and click below to lock your first autonomous grant escrow!
+            <div className="text-center py-20 rounded-3xl bg-gradient-to-br from-[#0c0f18] to-[#07090e] border border-amber-500/20 p-8">
+              <div className="h-16 w-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mx-auto mb-4">
+                <Gavel className="h-8 w-8" />
+              </div>
+              <h4 className="text-lg font-bold font-cinzel text-white tracking-wide">
+                No Judicial Cases Docketed On-Chain
+              </h4>
+              <p className="text-xs text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
+                The smart contract currently has 0 proposals registered on GenLayer Studionet. Connect your MetaMask wallet and select a verified precedent above to docket your first real on-chain case!
               </p>
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3.5">
                 <button
                   onClick={() => handleSelectScenario(DEMO_SCENARIOS[0])}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition"
+                  className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 text-xs font-bold border border-amber-500/30 transition shadow-lg"
                 >
-                  Load Compliant Yield Bot Preset (1 GEN)
+                  Docket Compliant Yield Bot (1 GEN)
                 </button>
                 <button
                   onClick={() => {
                     setActiveScenario(null);
                     setIsRegisterOpen(true);
                   }}
-                  className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-lg shadow-cyan-600/20 transition"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-bold shadow-lg shadow-amber-500/20 transition"
                 >
-                  Create Custom Grant Escrow
+                  Create Custom Case Docket
                 </button>
               </div>
             </div>
@@ -648,21 +694,21 @@ export const App: React.FC = () => {
         </div>
 
         {/* Live Web3 Diagnostic Console */}
-        <div className="mt-12 rounded-2xl bg-slate-950 border border-slate-800/90 overflow-hidden shadow-xl">
+        <div className="mt-14 rounded-3xl bg-[#07090e] border border-amber-500/20 overflow-hidden shadow-2xl">
           <button
             onClick={() => setShowLogs(!showLogs)}
-            className="w-full px-5 py-3 flex items-center justify-between bg-slate-900/60 hover:bg-slate-900 transition text-left text-xs font-semibold text-slate-300"
+            className="w-full px-6 py-3.5 flex items-center justify-between bg-slate-950/80 hover:bg-slate-900 transition text-left text-xs font-semibold text-slate-300"
           >
-            <div className="flex items-center gap-2">
-              <Terminal className="h-4 w-4 text-cyan-400" />
-              <span>Live Web3 Diagnostic & Consensus Console ({diagnosticLogs.length} events)</span>
+            <div className="flex items-center gap-2.5">
+              <Terminal className="h-4 w-4 text-amber-400" />
+              <span className="font-mono">Live Web3 Telemetry &amp; Quorum Ledger ({diagnosticLogs.length} events)</span>
             </div>
-            {showLogs ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {showLogs ? <ChevronUp className="h-4 w-4 text-amber-400" /> : <ChevronDown className="h-4 w-4 text-amber-400" />}
           </button>
           {showLogs && (
-            <div className="p-4 bg-black/60 font-mono text-[11px] text-slate-400 max-h-60 overflow-y-auto space-y-1">
+            <div className="p-5 bg-black/70 font-mono text-[11px] text-slate-400 max-h-60 overflow-y-auto space-y-1.5 border-t border-slate-800">
               {diagnosticLogs.map((log, index) => (
-                <div key={index} className="leading-relaxed hover:text-slate-200">
+                <div key={index} className="leading-relaxed hover:text-amber-300 transition">
                   {log}
                 </div>
               ))}
@@ -672,19 +718,21 @@ export const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950/80 py-6 mt-16 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-cyan-400" />
-            <span className="font-bold text-slate-300">AegisGov Protocol</span>
-            <span>— Autonomous AI Governance on GenLayer Studionet</span>
+      <footer className="border-t border-amber-500/20 bg-[#05070c] py-7 mt-20 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-7 w-7 rounded-lg overflow-hidden border border-amber-500/30">
+              <img src="/aegisgov_emblem.jpg" alt="AegisGov" className="h-full w-full object-cover" />
+            </div>
+            <span className="font-cinzel font-bold text-white tracking-wider">AegisGov Judicial Protocol</span>
+            <span className="text-slate-500">— Autonomous AI Safe-Harbor on GenLayer</span>
           </div>
-          <div className="flex items-center gap-4 text-slate-400">
+          <div className="flex items-center gap-5 text-slate-400 font-mono text-[11px]">
             <a
               href="https://studio.genlayer.com"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-cyan-400 transition"
+              className="hover:text-amber-400 transition"
             >
               GenLayer Studio
             </a>
@@ -692,11 +740,11 @@ export const App: React.FC = () => {
               href="https://docs.genlayer.com"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-cyan-400 transition"
+              className="hover:text-amber-400 transition"
             >
               Docs
             </a>
-            <span className="font-mono text-cyan-400/80">Chain ID: 61999 (0xF1EF)</span>
+            <span className="text-amber-400 font-bold">Studionet 61999 (0xF1EF)</span>
           </div>
         </div>
       </footer>
